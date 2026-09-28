@@ -381,5 +381,159 @@ class TestFiguresOfMerit(unittest.TestCase):
             self.assertTrue(np.allclose(U @ U.conj().T, np.eye(2 ** n)))
 
 
+class TestFastPaths(unittest.TestCase):
+    """The specialised channel routines must be rewrites, not approximations.
+
+    ``apply_depolarizing`` and friends exist only because the generic Kraus
+    route was the simulator's bottleneck -- roughly an order of magnitude of
+    the runtime went into axis bookkeeping for eight-flop contractions.  A
+    faster path that is even slightly different is worse than no path at all,
+    because every security threshold in the framework is calibrated against
+    numbers these functions produce.  So each one is pinned to the generic
+    implementation it replaces at machine precision, over every qubit position
+    of registers up to four qubits and over the full parameter range including
+    the degenerate endpoints 0 and 1.
+    """
+
+    def setUp(self):
+        self.rng = np.random.default_rng(20250920)
+
+    def _rho(self, n):
+        A = (self.rng.normal(size=(2 ** n, 2 ** n))
+             + 1j * self.rng.normal(size=(2 ** n, 2 ** n)))
+        r = A @ A.conj().T
+        return r / np.trace(r).real
+
+    def _kraus_depolarizing(self, p):
+        return [math.sqrt(1.0 - 3.0 * p / 4.0) * L.I2, math.sqrt(p / 4.0) * L.X,
+                math.sqrt(p / 4.0) * L.Y, math.sqrt(p / 4.0) * L.Z]
+
+    def test_pauli_channels_match_the_generic_kraus_route(self):
+        for n in (1, 2, 3, 4):
+            for q in range(n):
+                rho = self._rho(n)
+                for p in (0.0, 1e-3, 0.017, 0.25, 0.5, 0.913, 1.0):
+                    with self.subTest(n=n, q=q, p=p):
+                        self.assertTrue(np.allclose(
+                            L.apply_kraus(rho, self._kraus_depolarizing(p), [q]),
+                            L.apply_depolarizing(rho, q, p), atol=1e-14))
+                        self.assertTrue(np.allclose(
+                            L.apply_kraus(rho, [math.sqrt(1 - p) * L.I2,
+                                                math.sqrt(p) * L.Z], [q]),
+                            L.apply_dephasing(rho, q, p), atol=1e-14))
+                        self.assertTrue(np.allclose(
+                            L.apply_kraus(rho, [math.sqrt(1 - p) * L.I2,
+                                                math.sqrt(p) * L.X], [q]),
+                            L.apply_bitflip(rho, q, p), atol=1e-14))
+
+    def test_asymmetric_pauli_channel_matches_kraus(self):
+        for n in (1, 2, 3):
+            for q in range(n):
+                rho = self._rho(n)
+                for _ in range(8):
+                    px, py, pz = self.rng.dirichlet([1, 1, 1, 1])[:3]
+                    kraus = [math.sqrt(max(1 - px - py - pz, 0.0)) * L.I2,
+                             math.sqrt(px) * L.X, math.sqrt(py) * L.Y,
+                             math.sqrt(pz) * L.Z]
+                    self.assertTrue(np.allclose(
+                        L.apply_kraus(rho, kraus, [q]),
+                        L.apply_pauli_channel(rho, q, px, py, pz), atol=1e-14))
+
+    def test_depolarizing_is_the_uniform_pauli_channel(self):
+        """The replacement form and the twirl form are the same map."""
+        rho = self._rho(3)
+        for p in (0.03, 0.4, 1.0):
+            self.assertTrue(np.allclose(L.apply_depolarizing(rho, 1, p),
+                                        L.apply_pauli_channel(rho, 1, p / 4, p / 4, p / 4),
+                                        atol=1e-14), p)
+
+    def test_apply_1q_matches_apply_unitary(self):
+        gates = [L.H, L.X, L.Y, L.Z, L.S, L.SDG, L.T, L.ry(0.7), L.rz(-1.3), L.Z @ L.X]
+        for n in (1, 2, 3, 4):
+            for q in range(n):
+                rho = self._rho(n)
+                for U in gates + [L.random_unitary(1, self.rng) for _ in range(3)]:
+                    with self.subTest(n=n, q=q):
+                        self.assertTrue(np.allclose(
+                            L.apply_right(L.apply_left(rho, U, [q]), U.conj().T, [q]),
+                            L.apply_1q(rho, U, q), atol=1e-14))
+
+    def test_project_z_matches_sandwiching_and_reports_joint_probability(self):
+        for n in (1, 2, 3, 4):
+            for q in range(n):
+                rho = self._rho(n)
+                for b in (0, 1):
+                    P = np.zeros((2, 2), dtype=complex)
+                    P[b, b] = 1.0
+                    ref = L.apply_right(L.apply_left(rho, P, [q]), P, [q])
+                    prob, got = L.project_z(rho, q, b)
+                    with self.subTest(n=n, q=q, b=b):
+                        self.assertTrue(np.allclose(ref, got, atol=1e-14))
+                        self.assertAlmostEqual(prob, float(np.real(np.trace(ref))),
+                                               places=13)
+
+    def test_chained_projections_give_the_joint_probability(self):
+        """Two chained calls must yield p(u, v), not p(v | u).
+
+        The Bell readout in the distribution layer relies on this: it projects
+        qubit 0, then projects the unnormalised remainder, and reads the
+        second probability as the joint one.
+        """
+        rho = self._rho(3)
+        total = 0.0
+        for u in (0, 1):
+            _, ru = L.project_z(rho, 0, u)
+            for v in (0, 1):
+                puv, _ = L.project_z(ru, 1, v)
+                total += puv
+        self.assertAlmostEqual(total, 1.0, places=13)
+
+    def test_fast_paths_do_not_mutate_their_input(self):
+        rho = self._rho(3)
+        snapshot = rho.copy()
+        L.apply_depolarizing(rho, 1, 0.3)
+        L.apply_dephasing(rho, 2, 0.3)
+        L.apply_bitflip(rho, 0, 0.3)
+        L.apply_pauli_channel(rho, 1, 0.1, 0.2, 0.05)
+        L.apply_1q(rho, L.H, 2)
+        L.project_z(rho, 0, 1)
+        self.assertTrue(np.array_equal(rho, snapshot))
+
+    def test_fast_paths_preserve_trace_and_hermiticity(self):
+        rho = self._rho(4)
+        for out in (L.apply_depolarizing(rho, 2, 0.31),
+                    L.apply_dephasing(rho, 3, 0.22),
+                    L.apply_bitflip(rho, 1, 0.44),
+                    L.apply_pauli_channel(rho, 0, 0.1, 0.2, 0.05),
+                    L.apply_1q(rho, L.H, 1)):
+            self.assertAlmostEqual(float(np.real(np.trace(out))), 1.0, places=13)
+            self.assertTrue(np.allclose(out, out.conj().T, atol=1e-14))
+            self.assertTrue(L.is_density_matrix(out))
+
+    def test_zero_strength_is_the_identity_map(self):
+        rho = self._rho(2)
+        for out in (L.apply_depolarizing(rho, 0, 0.0),
+                    L.apply_dephasing(rho, 1, 0.0),
+                    L.apply_bitflip(rho, 0, 0.0),
+                    L.apply_pauli_channel(rho, 1, 0.0, 0.0, 0.0)):
+            self.assertTrue(np.allclose(out, rho, atol=1e-15))
+
+    def test_full_depolarizing_erases_the_qubit(self):
+        rho = L.bell_state("Phi+")
+        out = L.apply_depolarizing(rho, 0, 1.0)
+        self.assertTrue(np.allclose(out, np.eye(4) / 4.0, atol=1e-14))
+
+    def test_invalid_arguments_are_rejected(self):
+        rho = self._rho(2)
+        with self.assertRaises(ValueError):
+            L.apply_depolarizing(rho, 5, 0.1)
+        with self.assertRaises(ValueError):
+            L.apply_pauli_channel(rho, 0, 0.6, 0.6, 0.0)
+        with self.assertRaises(ValueError):
+            L.apply_1q(rho, np.eye(4), 0)
+        with self.assertRaises(ValueError):
+            L.project_z(rho, 0, 2)
+
+
 if __name__ == "__main__":  # pragma: no cover
     unittest.main(verbosity=2)

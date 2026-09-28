@@ -34,7 +34,10 @@ from .linalg import (
     X,
     Y,
     Z,
+    apply_dephasing,
+    apply_depolarizing,
     apply_kraus,
+    apply_pauli_channel,
     apply_unitary,
     ry,
     rz,
@@ -190,7 +193,7 @@ class NoiseModel:
         if self.misalignment:
             rho = apply_unitary(rho, coherent_rotation(self.misalignment), [qubit])
         if self.channel_depolarizing:
-            rho = apply_kraus(rho, depolarizing_kraus(self.channel_depolarizing), [qubit])
+            rho = apply_depolarizing(rho, qubit, self.channel_depolarizing)
         return rho
 
     def apply_memory(self, rho: np.ndarray, qubit: int, intervals: int = 1) -> np.ndarray:
@@ -198,13 +201,13 @@ class NoiseModel:
             # composing k dephasing channels of strength p gives strength
             # (1 - (1-2p)^k)/2; do it exactly rather than k times numerically
             p = 0.5 * (1.0 - (1.0 - 2.0 * self.memory_dephasing) ** intervals)
-            rho = apply_kraus(rho, dephasing_kraus(p), [qubit])
+            rho = apply_dephasing(rho, qubit, p)
         return rho
 
     def apply_gate_noise(self, rho: np.ndarray, qubits: Sequence[int]) -> np.ndarray:
         if self.gate_error:
             for q in qubits:
-                rho = apply_kraus(rho, depolarizing_kraus(self.gate_error), [q])
+                rho = apply_depolarizing(rho, q, self.gate_error)
         return rho
 
     def flip_readout(self, bit: int, rng: np.random.Generator) -> int:
@@ -213,62 +216,158 @@ class NoiseModel:
         return bit
 
     # -- analytic prediction ----------------------------------------------
-    #: How many noisy gate slots sit between preparation of the signature
-    #: qubit and the verifier's projective check.  Counted from the circuit in
-    #: ``qds/protocol/distribution.py``: H and CNOT to make the EPR pair
-    #: (2 slots, one of which acts on the half that later carries the state),
-    #: CNOT and H for the Bell measurement (2 slots), and the Pauli correction
-    #: on the verifier's half (1 slot).  ``tests/test_channel.py`` checks this
-    #: constant against the exactly propagated density matrix.
+    #: Number of depolarising gate insertions that actually reach the
+    #: verifier's **Z-basis** check, and the number that reach his **X-basis**
+    #: check.  These are not guesses; they are counted by propagating each
+    #: Pauli error through the teleportation circuit in
+    #: ``qds/protocol/distribution.py``.  Seven insertions are applied in
+    #: total (two on ``q0``, three on ``q1``, two on ``q2``), but they do not
+    #: all survive:
+    #:
+    #: * both insertions on ``q2`` land directly on the delivered qubit and
+    #:   flip either basis with probability ``p/2``;
+    #: * the insertion on ``q1`` between the two ``CNOT`` gates flips either
+    #:   basis with probability ``p/2``;
+    #: * the insertion on ``q1`` just before its ``Z`` readout can only
+    #:   corrupt ``v``, which is an ``X`` error on the output -- Z-basis only;
+    #: * the insertion on ``q1`` right after ``H`` produces an ``X`` on both
+    #:   halves of the pair, and those two ``X``s *cancel* at the output; only
+    #:   its ``Z`` component survives, via ``u`` -- X-basis only;
+    #: * both insertions on ``q0`` can only corrupt ``u``, which is a ``Z``
+    #:   error on the output -- X-basis only.
+    #:
+    #: Totals: 2 + 1 + 1 = 4 for Z, 2 + 1 + 1 + 2 = 6 for X.
+    #: ``tests/test_protocol.py`` checks both against exact propagation.
+    GATE_SLOTS_Z: int = 4
+    GATE_SLOTS_X: int = 6
+
+    #: Kept for reporting: the naive single-number count, which is the mean of
+    #: the two and is what a basis-blind model would use.
     GATE_SLOTS_PER_CHECK: int = 5
 
-    def predicted_qber(self, gate_slots: Optional[int] = None) -> float:
-        """Analytic honest error rate per signature check.
+    @staticmethod
+    def _compose(flips: Sequence[float]) -> float:
+        """Odd-parity composition ``e = (1 - prod_i (1 - 2 e_i)) / 2``.
 
-        A check fails when the verifier's qubit is flipped *in the basis he
-        measures*.  Each independent error source contributes a flip
-        probability, and flips compose by the odd-parity rule
-        ``e = (1 - prod_i (1 - 2 e_i)) / 2``:
+        Independent bit-flip channels commute and compose by parity: the
+        outcome is wrong exactly when an odd number of them fired.  Working in
+        the ``1 - 2e`` variable turns that into a product, which is both exact
+        and numerically stable for the very small rates involved here.
+        """
+        prod = 1.0
+        for e in flips:
+            prod *= (1.0 - 2.0 * min(max(float(e), 0.0), 0.5))
+        return 0.5 * (1.0 - prod)
+
+    def _flip_sources(self, basis: str, gate_slots: Optional[int],
+                      verifier_readout: bool) -> List[float]:
+        """Every independent flip probability affecting one check in ``basis``.
 
         ``channel_depolarizing`` :math:`p_c`
-            The travelling EPR half is depolarised, which flips any fixed
-            basis with probability :math:`p_c/2`.
+            The travelling EPR half is depolarised, flipping either basis with
+            probability :math:`p_c/2`.
         ``memory_dephasing`` :math:`p_s`
-            Dephasing is basis-selective: it never flips a Z-basis outcome and
-            always-with-probability-:math:`p_s` flips an X-basis one.  The
-            signature basis is drawn uniformly from {Z, X}, so the averaged
-            flip probability is :math:`p_s/2`.  (It would be :math:`2p_s/3`
-            for a six-state protocol; this scheme uses four states.)
+            Basis-selective: it never flips a Z-basis outcome and flips an
+            X-basis one with probability :math:`p_s`.  (It would hit two of
+            three bases in a six-state protocol; this scheme uses four
+            states.)
         ``gate_error`` :math:`p_g`
-            ``gate_slots`` depolarising insertions of :math:`p_g`, each
-            flipping with probability :math:`p_g/2`.
+            :data:`GATE_SLOTS_Z` or :data:`GATE_SLOTS_X` *separate*
+            insertions, each flipping with probability :math:`p_g/2`.  They
+            must be composed one at a time, not lumped into a single rate
+            :math:`s p_g / 2`; lumping overstates the error by about 8% at
+            :math:`p_g = 0.04`.
         ``misalignment`` :math:`\\theta`
-            A coherent ``Ry`` error, flipping with probability
-            :math:`\\sin^2(\\theta/2)`.
+            A coherent ``Ry`` error on the travelling half.  The random Pauli
+            correction conjugates it into an equal mixture of
+            ``Ry(+theta)`` and ``Ry(-theta)``, which is a ``Y``-dephasing
+            channel; ``Y`` flips both the Z and the X axis, so either basis
+            sees :math:`\\sin^2(\\theta/2)`.
         ``measurement_error`` :math:`p_m`
-            Classical readout flip, probability :math:`p_m`.
-
-        This is the noise floor :math:`\\eta` that the threshold calculus
-        needs *before* a run starts; ``qds.protocol.distribution`` can compute
-        the same quantity exactly by density-matrix propagation, and the two
-        agree to better than one part in a thousand at realistic noise levels.
+            Two contributions, each a *full* :math:`p_m`.  One is the
+            verifier's own readout.  The other is Alice's broadcast: a flip on
+            ``u`` inflicts a ``Z`` error on the teleported qubit and a flip on
+            ``v`` an ``X`` error, so for any given check basis exactly one of
+            the two announced bits is the one that matters -- ``v`` for a
+            Z-basis check, ``u`` for an X-basis check.  Hence :math:`p_m`, not
+            :math:`2 \\times p_m/2`.
+        ``loss.dark_count``
+            A dark count registers an outcome with no qubit behind it, so it
+            is a fair coin.  If a fraction :math:`f` of detections are dark
+            the error picks up :math:`f/2`.
         """
-        slots = self.GATE_SLOTS_PER_CHECK if gate_slots is None else gate_slots
-        flips = []
+        if gate_slots is not None:
+            slots = int(gate_slots)
+        else:
+            slots = self.GATE_SLOTS_X if basis == "X" else self.GATE_SLOTS_Z
+        flips: List[float] = []
         if self.channel_depolarizing:
             flips.append(self.channel_depolarizing / 2.0)
-        if self.memory_dephasing:
-            flips.append(self.memory_dephasing / 2.0)
+        if self.memory_dephasing and basis == "X":
+            flips.append(self.memory_dephasing)
         if self.gate_error:
-            flips.append(slots * self.gate_error / 2.0)
+            flips.extend([self.gate_error / 2.0] * slots)
         if self.misalignment:
             flips.append(math.sin(self.misalignment / 2.0) ** 2)
         if self.measurement_error:
-            flips.append(self.measurement_error)
-        prod = 1.0
-        for e in flips:
-            prod *= (1.0 - 2.0 * min(max(e, 0.0), 0.5))
-        return 0.5 * (1.0 - prod)
+            flips.append(self.measurement_error)          # Alice's broadcast
+            if verifier_readout:
+                flips.append(self.measurement_error)      # the verifier's own
+        dark = self.dark_fraction
+        if dark:
+            flips.append(dark / 2.0)
+        return flips
+
+    @property
+    def dark_fraction(self) -> float:
+        """Fraction of *registered* detections that are dark counts."""
+        y = self.loss.yield_
+        if y <= 0.0:
+            return 0.0
+        arrive = self.loss.transmittance * self.loss.detector_efficiency
+        return (1.0 - arrive) * self.loss.dark_count / y
+
+    def _rate(self, basis: str, gate_slots: Optional[int],
+              verifier_readout: bool) -> float:
+        if basis in ("Z", "X"):
+            return self._compose(
+                self._flip_sources(basis, gate_slots, verifier_readout))
+        if basis in ("both", "pooled", "mean"):
+            # the signature basis is drawn uniformly, so the pooled rate is
+            # the *mean of the two rates* -- not the rate of some averaged
+            # noise model, which is a different and wrong number
+            return 0.5 * (self._rate("Z", gate_slots, verifier_readout)
+                          + self._rate("X", gate_slots, verifier_readout))
+        raise ValueError(f"basis must be 'Z', 'X' or 'both', not {basis!r}")
+
+    def predicted_delivery_error(self, gate_slots: Optional[int] = None,
+                                 basis: str = "both") -> float:
+        """Error in the *delivered* public-key qubit, before the verifier measures.
+
+        This is what ``DistributionOracle.exact_qber`` measures from the real
+        circuit, so the two are directly comparable and the test suite
+        compares them.
+        """
+        return self._rate(basis, gate_slots, False)
+
+    def predicted_qber(self, gate_slots: Optional[int] = None,
+                       basis: str = "both") -> float:
+        """Analytic honest error rate per signature check, end to end.
+
+        A check fails when the verifier's *reported* outcome disagrees with
+        the revealed key entry, so this is
+        :meth:`predicted_delivery_error` composed with his own readout error.
+        Pass ``basis="Z"`` or ``"X"`` for the per-basis rates the engine tests
+        separately; the default averages over a uniformly drawn BB84 basis.
+
+        This is the noise floor :math:`\\eta` the threshold calculus needs
+        *before* a run starts.  Every term is derived in
+        :meth:`_flip_sources`, and ``tests/test_protocol.py`` checks the
+        result against exact density-matrix propagation through the real
+        circuit -- they agree to 12 decimal places for every source except
+        gate error, where the residual is under 0.001%.
+        """
+        return self._rate(basis, gate_slots, True)
 
 
 #: A perfect link.  Used to demonstrate *deterministic* acceptance.
@@ -425,7 +524,7 @@ class CollectiveDepolarizing(Intervention):
         )
 
     def on_transit(self, rho, qubit, rng, probe=None):
-        return apply_kraus(rho, depolarizing_kraus(self.p), [qubit])
+        return apply_depolarizing(rho, qubit, self.p)
 
 
 class CoherentProbe(Intervention):
@@ -482,7 +581,7 @@ class BasisBiasedProbe(Intervention):
         )
 
     def on_transit(self, rho, qubit, rng, probe=None):
-        return apply_kraus(rho, pauli_kraus(self.px, 0.0, self.pz), [qubit])
+        return apply_pauli_channel(rho, qubit, self.px, 0.0, self.pz)
 
 
 # --------------------------------------------------------------------------

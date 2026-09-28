@@ -44,7 +44,7 @@ __all__ = [
     "binom_test_greater", "binom_test_less", "binom_test_two_sided",
     "clopper_pearson", "wilson_interval",
     "hoeffding_tail", "hoeffding_threshold", "binary_kl", "chernoff_kl_tail",
-    "chernoff_threshold",
+    "chernoff_kl_tail_below", "chernoff_threshold",
     "normal_cdf", "normal_sf", "normal_quantile",
     "gammainc_lower_reg", "gammainc_upper_reg", "chi2_sf", "chi2_test",
     "sampling_deviation_bound", "sampling_deviation_margin",
@@ -224,6 +224,21 @@ def chernoff_kl_tail(n: int, p: float, q: float) -> float:
     is dramatically better than the ``2 n t**2`` form.
     """
     if q <= p:
+        return 1.0
+    return math.exp(-n * binary_kl(q, p))
+
+
+def chernoff_kl_tail_below(n: int, p: float, q: float) -> float:
+    """``P(X/n <= q) <= exp(-n D(q||p))`` for ``q < p``.
+
+    The mirror image of :func:`chernoff_kl_tail`, and the one the forgery
+    bound needs: a forger's per-check error rate is *at least* 1/4, so what
+    has to be bounded is the chance his observed rate falls *below* the
+    acceptance threshold.  Same relative-entropy exponent, opposite tail --
+    ``D(q||p)`` is not symmetric in its arguments, so the direction is not
+    cosmetic.
+    """
+    if q >= p:
         return 1.0
     return math.exp(-n * binary_kl(q, p))
 

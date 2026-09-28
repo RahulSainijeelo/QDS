@@ -5,10 +5,19 @@ engine is set relative to ``NoiseModel.predicted_qber()``.  So the analytic
 formula is checked against the *exactly propagated density matrix* rather than
 against a plausible-looking number, and the interventions are checked against
 closed-form disturbance expressions derived in the docstrings.
+
+The cross-check deliberately reaches into :mod:`qds.protocol.distribution`.
+An earlier version of this file re-derived the error budget here, inside the
+test, and compared that against ``predicted_qber`` -- which only ever proved
+that two hand-written formulas agreed with each other, and needed a 6 percent
+tolerance to do even that.  The quantity ``predicted_qber`` exists to predict
+is the error rate of the real teleportation circuit, so that is what it is now
+measured against, and the tolerance is machine epsilon rather than a fudge.
 """
 
 from __future__ import annotations
 
+import dataclasses
 import math
 import unittest
 
@@ -16,27 +25,49 @@ import numpy as np
 
 from qds import channel as C
 from qds import linalg as L
+from qds.protocol.distribution import DistributionConfig, teleport_state
+from qds.protocol.keys import KeyEntry, Slot
+
+
+def _lossless(nm: C.NoiseModel) -> C.NoiseModel:
+    """Same noise, perfect detectors.
+
+    ``predicted_delivery_error`` describes the qubit that *arrived*; photon
+    loss is a classical erasure handled at the protocol layer, and a lost
+    round reports fidelity 1/2 by convention.  Mixing the two would compare
+    different quantities.
+    """
+    return dataclasses.replace(nm, loss=C.LossModel())
+
+
+def circuit_delivery_error(nm: C.NoiseModel, basis: int) -> float:
+    """Error of the delivered public-key qubit, from the real circuit.
+
+    Runs the full teleportation round -- EPR preparation, channel, Bell
+    measurement, classical announcement, Pauli correction, memory storage --
+    in exact (non-sampled) mode and averages over both key bits.
+    """
+    cfg = DistributionConfig(noise=_lossless(nm), exact=True)
+    rng = np.random.default_rng(0)
+    errs = [
+        1.0 - teleport_state(KeyEntry(basis=basis, bit=bit), Slot(0, 0, 0), cfg, rng).fidelity
+        for bit in (0, 1)
+    ]
+    return float(np.mean(errs))
 
 
 def exact_qber(nm: C.NoiseModel) -> float:
-    """Honest per-check error rate, averaged over the four BB84 states.
+    """Honest per-check error rate from the real circuit, averaged over bases.
 
-    Computed by propagating the density matrix through exactly the same error
-    sources ``predicted_qber`` claims to model -- no sampling, no fitting.
+    This is ``circuit_delivery_error`` composed with the verifier's own
+    readout error, which is exactly what a signature check measures.
     """
+    pm = nm.measurement_error
     total = 0.0
     for basis in (0, 1):
-        for bit in (0, 1):
-            target = L.bb84_state(basis, bit)
-            rho = nm.apply_channel(L.density(target), 0)
-            rho = nm.apply_memory(rho, 0, 1)
-            if nm.gate_error:
-                for _ in range(nm.GATE_SLOTS_PER_CHECK):
-                    rho = L.apply_kraus(rho, C.depolarizing_kraus(nm.gate_error), [0])
-            e = 1.0 - L.fidelity_pure(rho, target)
-            pm = nm.measurement_error
-            total += e * (1 - pm) + (1 - e) * pm
-    return total / 4.0
+        e = circuit_delivery_error(nm, basis)
+        total += e * (1.0 - pm) + (1.0 - e) * pm
+    return total / 2.0
 
 
 class TestKrausSets(unittest.TestCase):
@@ -114,6 +145,14 @@ class TestNoiseModel(unittest.TestCase):
                                    math.sin(theta / 2) ** 2, places=14)
 
     def test_predicted_qber_matches_exact_propagation(self):
+        """The analytic noise floor must equal the real circuit, not approximate it.
+
+        ``predicted_qber`` is a closed form obtained by propagating each Pauli
+        error through the teleportation circuit by hand.  If the hand
+        propagation is right it is not an approximation at all, so the
+        tolerance here is numerical rather than statistical: anything above
+        1e-12 means the two have genuinely drifted apart.
+        """
         cases = {
             "lab": C.LAB_GRADE,
             "field": C.FIELD_GRADE,
@@ -123,11 +162,46 @@ class TestNoiseModel(unittest.TestCase):
             "misalign": C.NoiseModel(misalignment=0.25),
             "gates": C.NoiseModel(gate_error=0.01),
             "all": C.NoiseModel(0.02, 0.01, 0.003, 0.005, 0.03),
+            "heavy": C.NoiseModel(0.12, 0.05, 0.03, 0.02, 0.2),
         }
         for label, nm in cases.items():
-            analytic, exact = nm.predicted_qber(), exact_qber(nm)
-            self.assertLess(abs(analytic - exact), 2e-3, label)
-            self.assertLess(abs(analytic - exact) / max(exact, 1e-12), 0.06, label)
+            with self.subTest(label):
+                lossless = _lossless(nm)
+                self.assertAlmostEqual(lossless.predicted_qber(), exact_qber(nm),
+                                       delta=1e-12, msg=label)
+
+    def test_predicted_delivery_error_is_per_basis_exact(self):
+        """X checks see more error than Z checks, and by a predicted amount.
+
+        The asymmetry is real: six depolarising gate insertions reach an
+        X-basis check against four for a Z-basis check, and memory dephasing
+        damages X eigenstates while leaving Z eigenstates alone.  A model that
+        only tracked a pooled rate would miss a basis-biased attack entirely,
+        so the per-basis split is checked separately from the average.
+        """
+        for nm in (C.LAB_GRADE, C.FIELD_GRADE,
+                   C.NoiseModel(memory_dephasing=0.05),
+                   C.NoiseModel(gate_error=0.01)):
+            lossless = _lossless(nm)
+            z = lossless.predicted_delivery_error(basis="Z")
+            x = lossless.predicted_delivery_error(basis="X")
+            self.assertAlmostEqual(z, circuit_delivery_error(nm, 0), delta=1e-12)
+            self.assertAlmostEqual(x, circuit_delivery_error(nm, 1), delta=1e-12)
+            if nm.memory_dephasing or nm.gate_error:
+                self.assertGreater(x, z)
+
+    def test_dark_counts_raise_the_predicted_error(self):
+        """A detector that clicks on nothing contributes a coin flip.
+
+        Dark counts are the one loss effect that shows up in the *error* rate
+        rather than only in the yield, because a dark click still produces an
+        outcome and that outcome is uniform.
+        """
+        base = C.NoiseModel(channel_depolarizing=0.02)
+        dark = dataclasses.replace(
+            base, loss=C.LossModel(transmittance=0.9, detector_efficiency=0.9,
+                                   dark_count=0.01))
+        self.assertGreater(dark.predicted_qber(), base.predicted_qber())
 
     def test_presets_leave_headroom_below_the_forgery_bound(self):
         """The security condition eta < T < 1/4 must be satisfiable."""

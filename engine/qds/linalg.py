@@ -37,6 +37,8 @@ __all__ = [
     "rx", "ry", "rz", "phase", "pauli_string_op",
     "ket", "density", "bell_state", "BELL_STATES", "bb84_state",
     "apply_unitary", "apply_kraus", "apply_left", "apply_right",
+    "apply_depolarizing", "apply_dephasing", "apply_bitflip",
+    "apply_pauli_channel", "apply_1q", "project_z",
     "partial_trace", "reorder_qubits",
     "measure_qubit", "measure_pauli", "expectation",
     "axis_op", "measure_axis", "expectation_axis",
@@ -208,7 +210,148 @@ def apply_right(rho: np.ndarray, B: np.ndarray, qubits: Sequence[int]) -> np.nda
 def apply_unitary(rho: np.ndarray, U: np.ndarray, qubits: Sequence[int]) -> np.ndarray:
     """Return ``U rho U†`` with ``U`` acting on ``qubits`` (in that order)."""
     U = np.asarray(U, dtype=complex)
+    if U.shape == (2, 2) and len(qubits) == 1:
+        return apply_1q(rho, U, int(qubits[0]))
     return apply_right(apply_left(rho, U, qubits), U.conj().T, qubits)
+
+
+# --------------------------------------------------------------------------
+# fast exact paths for single-qubit Pauli channels
+# --------------------------------------------------------------------------
+# The generic Kraus route costs eight tensor contractions per depolarising
+# insertion, and the teleportation circuit applies seven of them per round.
+# The identities below are exact rewrites, not approximations -- the
+# simulator's hot loop runs an order of magnitude faster for exactly the same
+# numbers, and ``tests/test_linalg.py`` asserts agreement with
+# :func:`apply_kraus` to machine precision rather than taking that on trust.
+
+def _qubit_view(rho: np.ndarray, qubit: int) -> Tuple[np.ndarray, int]:
+    """Reshape ``rho`` to ``(left, 2, right, left, 2, right)`` around ``qubit``."""
+    n = _n_qubits(rho)
+    if not 0 <= qubit < n:
+        raise ValueError(f"qubit {qubit} outside a {n}-qubit register")
+    left = 1 << qubit
+    right = 1 << (n - 1 - qubit)
+    return rho.reshape(left, 2, right, left, 2, right), n
+
+
+def apply_depolarizing(rho: np.ndarray, qubit: int, p: float) -> np.ndarray:
+    """``rho -> (1 - p) rho + p (I/2) ⊗ Tr_qubit(rho)``.
+
+    The Pauli-twirl form ``(1-3p/4) rho + (p/4)(X rho X + Y rho Y + Z rho Z)``
+    and this replacement form are the same map; the replacement form needs one
+    partial trace instead of three conjugations, so it is what runs.
+    """
+    if p <= 0.0:
+        return rho
+    t, n = _qubit_view(rho, qubit)
+    traced = t[:, 0, :, :, 0, :] + t[:, 1, :, :, 1, :]
+    out = (1.0 - p) * t
+    half = (0.5 * p) * traced
+    out[:, 0, :, :, 0, :] += half
+    out[:, 1, :, :, 1, :] += half
+    return out.reshape(1 << n, 1 << n)
+
+
+def apply_dephasing(rho: np.ndarray, qubit: int, p: float) -> np.ndarray:
+    """``rho -> (1 - p) rho + p Z rho Z``: scale the coherences by ``1 - 2p``."""
+    if p <= 0.0:
+        return rho
+    t, n = _qubit_view(rho, qubit)
+    out = t.copy()
+    factor = 1.0 - 2.0 * p
+    out[:, 0, :, :, 1, :] *= factor
+    out[:, 1, :, :, 0, :] *= factor
+    return out.reshape(1 << n, 1 << n)
+
+
+def apply_bitflip(rho: np.ndarray, qubit: int, p: float) -> np.ndarray:
+    """``rho -> (1 - p) rho + p X rho X``."""
+    if p <= 0.0:
+        return rho
+    t, n = _qubit_view(rho, qubit)
+    out = (1.0 - p) * t + p * t[:, ::-1, :, :, ::-1, :]
+    return out.reshape(1 << n, 1 << n)
+
+
+def apply_pauli_channel(rho: np.ndarray, qubit: int,
+                        px: float, py: float, pz: float) -> np.ndarray:
+    """``rho -> p0 rho + px X rho X + py Y rho Y + pz Z rho Z``.
+
+    Uses the index identities ``(X rho X)_{ij} = rho_{1-i, 1-j}``,
+    ``(Z rho Z)_{ij} = (-1)^{i+j} rho_{ij}`` and, since ``Y = iXZ``,
+    ``(Y rho Y)_{ij} = (-1)^{i+j} rho_{1-i, 1-j}`` on the target qubit's two
+    indices, so the whole channel is four scaled array views added together.
+    """
+    p0 = 1.0 - px - py - pz
+    if min(px, py, pz) < 0.0 or p0 < -1e-12:
+        raise ValueError("Pauli probabilities must be non-negative and sum <= 1")
+    if px == py == pz == 0.0:
+        return rho
+    t, n = _qubit_view(rho, qubit)
+    flip = t[:, ::-1, :, :, ::-1, :]
+    out = max(p0, 0.0) * t + px * flip
+    if pz or py:
+        # sign pattern (-1)^{i+j}: +1 on the diagonal blocks, -1 off them
+        sgn = np.empty((1, 2, 1, 1, 2, 1), dtype=float)
+        sgn[0, 0, 0, 0, 0, 0] = sgn[0, 1, 0, 0, 1, 0] = 1.0
+        sgn[0, 0, 0, 0, 1, 0] = sgn[0, 1, 0, 0, 0, 0] = -1.0
+        if pz:
+            out += pz * (sgn * t)
+        if py:
+            out += py * (sgn * flip)
+    return out.reshape(1 << n, 1 << n)
+
+
+def apply_1q(rho: np.ndarray, U: np.ndarray, qubit: int) -> np.ndarray:
+    """``U rho U†`` for a single-qubit ``U``, without any axis shuffling.
+
+    ``apply_unitary`` is general and pays for it: two ``tensordot`` calls plus
+    two ``moveaxis`` calls, and the axis bookkeeping costs more than the eight
+    multiply-adds that actually do the work at these register sizes.  Here the
+    target index is exposed by reshaping alone -- ``(left, 2, rest)`` for the
+    row index, ``(rest, 2, right)`` for the column index -- so each side is one
+    broadcast ``matmul``.
+    """
+    U = np.asarray(U, dtype=complex)
+    if U.shape != (2, 2):
+        raise ValueError("apply_1q expects a 2x2 matrix")
+    n = _n_qubits(rho)
+    if not 0 <= qubit < n:
+        raise ValueError(f"qubit {qubit} outside a {n}-qubit register")
+    d = 1 << n
+    left = 1 << qubit
+    right = 1 << (n - 1 - qubit)
+    # row side: (I ⊗ U ⊗ I) rho
+    out = np.matmul(U, rho.reshape(left, 2, right * d)).reshape(d, d)
+    # column side: rho (I ⊗ U† ⊗ I); U†[m, j] = conj(U[j, m]), so the matrix
+    # that left-multiplies the exposed column index is U†.T = U.conj()
+    out = np.matmul(U.conj(), out.reshape(d * left, 2, right)).reshape(d, d)
+    return out
+
+
+def project_z(rho: np.ndarray, qubit: int, bit: int) -> Tuple[float, np.ndarray]:
+    """``(probability, P rho P)`` for the Z-basis projector ``P = |bit><bit|``.
+
+    Sandwiching by a computational-basis projector keeps exactly one block of
+    the reshaped array and zeroes the rest, so this is a masked copy rather
+    than two contractions.  ``rho`` may be unnormalised, in which case the
+    probability returned is the joint probability of this outcome together
+    with whatever produced ``rho`` -- which is what makes chained calls give
+    ``p(u, v)`` directly.
+    """
+    n = _n_qubits(rho)
+    if bit not in (0, 1):
+        raise ValueError("bit must be 0 or 1")
+    left = 1 << qubit
+    right = 1 << (n - 1 - qubit)
+    t = rho.reshape(left, 2, right, left, 2, right)
+    out = np.zeros_like(t)
+    block = t[:, bit, :, :, bit, :]
+    out[:, bit, :, :, bit, :] = block
+    # trace of the kept block: sum over (l, r) of its diagonal entries
+    prob = float(np.einsum("lrlr->", block).real)
+    return prob, out.reshape(1 << n, 1 << n)
 
 
 def apply_kraus(rho: np.ndarray, kraus: Iterable[np.ndarray],
