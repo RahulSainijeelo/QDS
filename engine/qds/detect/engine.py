@@ -385,9 +385,13 @@ _TABLE: List[Tuple[str, Any, str]] = [
         "is the property that makes the classical transcript leak nothing "
         "about the key, and it holds under every honest noise model, so a "
         "bias is not explicable as hardware degradation in the way an error "
-        "rate is. The realistic causes are interference with the Bell "
-        "measurement, with the classical channel, or a defect in the signer's "
-        "random number source.",
+        "rate is. That makes this finding sharper than the others, but not "
+        "unambiguous: interference with the Bell measurement and interference "
+        "with the classical channel both produce it, and so, equally, does a "
+        "defective random number source on the signer's own side -- which is "
+        "a serious bug rather than an attack. The histogram in the detail "
+        "field shows which outcome is over-represented, and that is the thing "
+        "worth looking at before concluding anything.",
     ),
     (
         "channel_blocking_or_blinding",
@@ -408,9 +412,10 @@ _TABLE: List[Tuple[str, Any, str]] = [
         "adversary who probes a single basis gains information at a "
         "disturbance cost concentrated in that basis, and pooling the two "
         "rates halves the apparent damage -- which is exactly how such an "
-        "attack slips under a single-number threshold. A polarisation or "
-        "waveplate misalignment that affects one basis produces the same "
-        "asymmetry.",
+        "attack slips under a single-number threshold. Equally, a "
+        "polarisation drift or a waveplate a degree out of alignment loads "
+        "one basis and not the other, and produces the same asymmetry with "
+        "nobody on the line.",
     ),
     (
         "selective_slot_attack",
@@ -442,8 +447,9 @@ _TABLE: List[Tuple[str, Any, str]] = [
         "Both the error rate and the yield are out of spec. An adversary who "
         "measures every round and forwards only some produces both at once: "
         "the rounds he resends are disturbed, and the rounds he drops are "
-        "missing. Hardware that is simultaneously lossy and noisy -- an aging "
-        "fibre, a detector past its cooling budget -- produces the same pair.",
+        "missing. Equally, hardware that is simultaneously lossy and noisy "
+        "-- an aging fibre, a detector past its cooling budget -- produces "
+        "the same pair, and this test cannot tell the two apart.",
     ),
     (
         "elevated_channel_error",
@@ -452,16 +458,18 @@ _TABLE: List[Tuple[str, Any, str]] = [
         "explains, with no other detector giving the departure a shape. This "
         "is the generic finding: something is disturbing the quantum channel. "
         "An eavesdropper must produce it, but so does any degradation of the "
-        "link, and at this level of evidence the framework cannot and should "
-        "not choose between them.",
+        "link, and at this level of evidence the framework cannot tell the "
+        "two apart and should not pretend to. Read it as 'this link is not "
+        "the link that was specified', which is actionable on its own.",
     ),
     (
         "rate_exceeds_transfer_threshold",
         lambda f, e: "pooled_rate_vs_transfer" in f,
         "The error rate has passed the threshold at which a signature stops "
-        "being safely forwardable. Whatever the cause, a recipient who accepts "
-        "on this evidence cannot rely on the next party reaching the same "
-        "conclusion.",
+        "being safely forwardable. This is a comparison against a number "
+        "fixed in advance, not an inference about a cause: whatever put the "
+        "rate there, a recipient who accepts on this evidence cannot rely on "
+        "the next party reaching the same conclusion.",
     ),
     (
         "sequential_onset_detected",
@@ -470,7 +478,10 @@ _TABLE: List[Tuple[str, Any, str]] = [
         "meaning the evidence became decisive partway through rather than only "
         "in aggregate. Read together with the stopping index, this separates a "
         "problem that was present from the first check from one that began "
-        "mid-session.",
+        "mid-session. It says when, not what: an adversary switching on "
+        "mid-run and a detector that drifted mid-run look alike here, and an "
+        "unlucky cluster of honest errors early in a short run can stop the "
+        "monitor with nothing behind it.",
     ),
 ]
 

@@ -29,6 +29,7 @@ is the wiring rather than the statistics.
 
 from __future__ import annotations
 
+import ast
 import json
 import math
 import pathlib
@@ -104,21 +105,32 @@ def make_calibration(k: int, n: int):
     return types.SimpleNamespace(decoy_mismatches=int(k), decoys_measured=int(n))
 
 
-def synthetic_evidence(rng, *, n_per_verifier: int = 96, verifiers=("bob",),
+def synthetic_evidence(rng, *, n_per_verifier: int = 96,
+                       verifiers=("bob", "charlie"),
                        spec_z: float = 0.010, spec_x: float = 0.014,
                        declared_yield: float = 0.78,
                        declared_dark: float = 0.004,
                        n_slots: int = 384, alpha_family: float = 0.01,
                        s_a: float = 0.05, s_v: float = 0.12,
                        decoys: int = 64) -> Evidence:
-    """An evidence bundle in which every null hypothesis is exactly true."""
+    """An evidence bundle in which every null hypothesis is exactly true.
+
+    Two recipients and both verification levels are present deliberately.
+    ``recipient_agreement`` needs two recipients to have anything to compare,
+    and ``level_homogeneity`` needs two levels; with a single "accept" report
+    from a single verifier those two rules are permanently inapplicable, and a
+    false-alarm calibration that silently omits two of the eleven detectors is
+    measuring the wrong family.  ``test_every_detector_was_exercised`` is what
+    holds this honest.
+    """
     spec = 0.5 * (spec_z + spec_x)
     policy = make_policy(spec, s_a, s_v)
     reports = []
     for name in verifiers:
-        reports.append(make_report(
-            honest_specs(rng, n_per_verifier, spec_z, spec_x),
-            verifier=name, level="accept", threshold=s_a, policy=policy))
+        for level, thr in (("accept", s_a), ("transfer", s_v)):
+            reports.append(make_report(
+                honest_specs(rng, n_per_verifier, spec_z, spec_x),
+                verifier=name, level=level, threshold=thr, policy=policy))
 
     logs = {}
     for name in verifiers:
@@ -179,20 +191,65 @@ class TestPrivilegeBoundary(unittest.TestCase):
             + offenders))
 
     def test_summary_oracle_is_never_read(self):
-        """``DistributionResult.summary()`` carries ground truth; stay out."""
-        engine_src = (DETECT_DIR / "engine.py").read_text(encoding="utf-8")
-        self.assertNotIn("summary()", engine_src)
+        """``DistributionResult.summary()`` carries ground truth; stay out.
+
+        Checked by parsing rather than grepping, because this module defines
+        a legitimate ``DetectionReport.summary()`` of its own and explains the
+        prohibition in a docstring.  A substring search would trip on both.
+        What is actually forbidden is *calling* ``.summary()`` on something
+        that is not ``self``.
+        """
+        tree = ast.parse((DETECT_DIR / "engine.py").read_text(encoding="utf-8"))
+        offenders = []
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+            fn = node.func
+            if isinstance(fn, ast.Attribute) and fn.attr == "summary":
+                base = fn.value
+                if not (isinstance(base, ast.Name) and base.id == "self"):
+                    offenders.append(f"line {node.lineno}: {ast.unparse(fn)}()")
+        self.assertEqual(offenders, [], "\n".join(
+            ["engine.py calls .summary() on a non-self object, which is how "
+             "the simulator's oracle would get in:"] + offenders))
 
     def test_evidence_from_session_carries_no_truth(self):
+        """No privileged quantity may appear as a *key* or an identifier.
+
+        The tokens are matched against JSON keys and against the privileged
+        attribute names, not against the prose.  An interpretation string is
+        allowed to say the words "costs no fidelity" -- explaining what the
+        detector means is the point of that field.  What may never appear is a
+        fidelity *number*, which would have to arrive under a key.
+        """
         cfg = SessionConfig(message_bits=8, L=8, distribution=DistributionConfig(
             noise=PRESET_NOISE["lab"], check_pairs=16, decoy_slots=16))
         session = QDSSession(cfg, seed=3)
         session.run(message=b"\xb0")
         ev = Evidence.from_session(session)
-        blob = json.dumps(DetectionEngine().run(ev).to_dict())
-        for token in ("chsh", "concurrence", "fidelity", "exact_qber",
-                      "oracle", "disturbance"):
-            self.assertNotIn(token, blob.lower(),
+        payload = DetectionEngine().run(ev).to_dict()
+
+        def keys(obj):
+            if isinstance(obj, dict):
+                for k, v in obj.items():
+                    yield str(k)
+                    yield from keys(v)
+            elif isinstance(obj, (list, tuple)):
+                for v in obj:
+                    yield from keys(v)
+
+        privileged = ("chsh", "concurrence", "fidelity", "exact_qber",
+                      "oracle", "disturbance", "eve_", "true_")
+        for key in keys(payload):
+            for token in privileged:
+                self.assertNotIn(
+                    token, key.lower(),
+                    f"a value is being reported under key {key!r}, which "
+                    f"names the privileged quantity {token!r}")
+        # and the identifiers themselves are absent from the whole payload
+        blob = json.dumps(payload).lower()
+        for token in self.FORBIDDEN:
+            self.assertNotIn(token.lower(), blob,
                              f"{token!r} leaked into the detection report")
 
 
@@ -522,13 +579,35 @@ class TestRulesFire(unittest.TestCase):
         more gate insertions, so a detector that tested Z against X rather
         than each against its own declared value would false-alarm on every
         healthy link.
+
+        The mismatches are placed deterministically rather than sampled.  At
+        four hundred checks per basis a 0.6% rate is about two events, and the
+        *ratio* of two such counts swings wildly from seed to seed -- an
+        earlier version of this test drew five Z mismatches instead of two and
+        failed on its own premise rather than on the behaviour under test.
+        Fixing the counts makes the asymmetry exact and the test about the
+        detector.
         """
-        ev = synthetic_evidence(self.rng, n_per_verifier=800,
+        n, per_basis = 800, 400
+        z_hits, x_hits = 2, 8           # 0.50% in Z against 2.00% in X
+        specs = []
+        z_seen = x_seen = 0
+        for i in range(n):
+            basis = i % 2               # 1 -> X, 0 -> Z, matching honest_specs
+            if basis:
+                x_seen += 1
+                bad = (x_seen * x_hits) % per_basis < x_hits
+            else:
+                z_seen += 1
+                bad = (z_seen * z_hits) % per_basis < z_hits
+            specs.append((i % 8, basis, bad, "ok"))
+
+        ev = synthetic_evidence(self.rng, n_per_verifier=n,
                                 spec_z=0.006, spec_x=0.020)
-        ev.reports = [make_report(honest_specs(self.rng, 800, 0.006, 0.020),
-                                  threshold=0.05)]
+        ev.reports = [make_report(specs, threshold=0.05)]
         ev.__post_init__()
         by = est.rates_by_basis(ev.reports)
+        self.assertEqual((by["Z"].k, by["X"].k), (z_hits, x_hits))
         self.assertGreater(by["X"].value, 2.0 * by["Z"].value,
                            "premise of this test broke")
         self.assertNotIn("basis_consistency", self._run(ev).flagged)
@@ -715,11 +794,22 @@ class TestFalseAlarmCalibration(unittest.TestCase):
                       f"its null hypothesis is probably wrong, not unlucky")
 
     def test_sequential_monitor_false_alarm_rate(self):
+        """Both monitors are calibrated, so this bound is tight, not generous.
+
+        The SPRT runs at alpha=1e-3 by Wald's boundary and the CUSUM at
+        alpha=1e-3 by ``h = ln(n/alpha)``, so the union is bounded by 2e-3.
+        The CUSUM bound is conservative -- it unions over restart points that
+        in fact overlap -- so the observed rate should sit well under even
+        that.  One percent leaves room for a 400-trial estimate while still
+        catching the failure this test was written for: feeding the CUSUM a
+        running average instead of raw outcomes correlates its increments and
+        pushes the rate to about six percent.
+        """
         onset = sum(1 for r in self.reports if "sequential_onset" in r.flagged)
         self.assertLessEqual(
-            onset / self.TRIALS, 0.05,
+            onset / self.TRIALS, 0.01,
             f"the sequential monitor alarmed on {onset}/{self.TRIALS} honest "
-            f"runs; SPRT at alpha=1e-3 plus CUSUM at h=5 should be far rarer")
+            f"runs; SPRT and CUSUM are each designed for 1e-3")
 
     def test_honest_runs_are_mostly_clean(self):
         clean = sum(1 for r in self.reports if r.verdict == "clean")
@@ -847,7 +937,7 @@ class TestVerdict(unittest.TestCase):
                   "innocent", "unlucky", "separately", "comparison")
         for label, _cond, rationale in _TABLE:
             self.assertTrue(
-                any(h in rationale for h in hedges),
+                any(h in rationale.lower() for h in hedges),
                 f"the rationale for {label!r} states a cause without "
                 f"acknowledging the alternative explanation")
 

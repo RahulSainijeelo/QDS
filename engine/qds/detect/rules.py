@@ -706,15 +706,15 @@ class SequentialOnset(Rule):
         sprt = stats.SPRT(p0=p0, p1=p1, alpha=1e-3, beta=1e-3)
         state = sprt.run(bool(e) for e in sequence)
 
-        # The CUSUM consumes a running rate rather than raw outcomes, so feed
-        # it the cumulative error rate after each check.
-        running: List[float] = []
-        errors = 0
-        for i, e in enumerate(sequence, start=1):
-            errors += int(bool(e))
-            running.append(errors / i)
-        cusum = stats.CUSUM(p0=p0, p1=p1)
-        cstate = cusum.run(running)
+        # Raw per-check outcomes, not a running average: the CUSUM increment
+        # is a per-observation log-likelihood ratio and its calibration
+        # assumes the increments are independent.  Feeding it a cumulative
+        # rate makes them strongly autocorrelated, and the monitor then drifts
+        # up on honest data -- that mistake cost this rule a 6% false-alarm
+        # rate against a designed 0.1%.
+        cusum = stats.CUSUM.for_window(p0=p0, p1=p1, n=len(sequence),
+                                       alpha=1e-3)
+        cstate = cusum.run(bool(e) for e in sequence)
 
         fired = state.decision == "accept_h1" or cstate.alarm_at is not None
         stop_at = state.n if state.decision == "accept_h1" else cstate.alarm_at
@@ -731,6 +731,7 @@ class SequentialOnset(Rule):
                 "sprt_stopped_at": state.n,
                 "cusum_alarm_at": cstate.alarm_at,
                 "cusum_final": _f(cstate.s),
+                "cusum_threshold": _f(cusum.threshold_h),
                 "stopped_at": stop_at,
                 "p0": p0, "p1": p1,
                 "null_rate_clamped": clamped,
@@ -738,7 +739,12 @@ class SequentialOnset(Rule):
                 "decision_rule": ("flagged when the SPRT crosses its upper "
                                   "boundary or the CUSUM alarms; there is no "
                                   "p-value because the stopping rule, not a "
-                                  "fixed sample, controls the error rates"),
+                                  "fixed sample, controls the error rates. "
+                                  "both boundaries are derived from a "
+                                  "declared alpha of 1e-3 -- Wald's for the "
+                                  "SPRT, ln(n/alpha) for the CUSUM -- so the "
+                                  "combined false-alarm rate over a run is "
+                                  "bounded by 2e-3"),
             },
             interpretation=(
                 "A sequential monitor would have stopped this run before it "

@@ -17,7 +17,8 @@ tested from its definition:
   (:func:`chi2_sf`),
 * the normal CDF from ``math.erf`` and its quantile by a rational
   approximation refined with Newton steps to machine precision,
-* Clopper-Pearson intervals by bisection on the exact binomial CDF.
+* Clopper-Pearson intervals as Beta quantiles, the Beta itself coming from a
+  Lentz continued fraction (:func:`betainc`, :func:`clopper_pearson`).
 
 Vocabulary used throughout
 --------------------------
@@ -42,7 +43,7 @@ import numpy as np
 __all__ = [
     "log_binom", "binom_pmf", "binom_cdf", "binom_sf",
     "binom_test_greater", "binom_test_less", "binom_test_two_sided",
-    "clopper_pearson", "wilson_interval",
+    "betainc", "beta_ppf", "clopper_pearson", "wilson_interval",
     "hoeffding_tail", "hoeffding_threshold", "binary_kl", "chernoff_kl_tail",
     "chernoff_kl_tail_below", "chernoff_threshold",
     "normal_cdf", "normal_sf", "normal_quantile",
@@ -133,32 +134,116 @@ def binom_test_two_sided(k: int, n: int, p0: float) -> float:
     ))
 
 
+def _betacf(a: float, b: float, x: float,
+            itmax: int = 400, eps: float = 3e-16) -> float:
+    """Continued fraction for the incomplete beta, by modified Lentz.
+
+    This is the standard Numerical Recipes recurrence.  It converges in a few
+    tens of iterations over the range the caller is restricted to, which is
+    what makes :func:`betainc` independent of ``n`` -- the whole reason this
+    function exists.  ``_TINY`` guards the Lentz denominators against an exact
+    zero, which is a numerical accident rather than a real pole.
+    """
+    tiny = 1e-300
+    qab, qap, qam = a + b, a + 1.0, a - 1.0
+    c = 1.0
+    d = 1.0 - qab * x / qap
+    if abs(d) < tiny:
+        d = tiny
+    d = 1.0 / d
+    h = d
+    for m in range(1, itmax + 1):
+        m2 = 2 * m
+        for aa in (m * (b - m) * x / ((qam + m2) * (a + m2)),
+                   -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2))):
+            d = 1.0 + aa * d
+            if abs(d) < tiny:
+                d = tiny
+            c = 1.0 + aa / c
+            if abs(c) < tiny:
+                c = tiny
+            d = 1.0 / d
+            h *= d * c
+        if abs(d * c - 1.0) < eps:
+            break
+    return h
+
+
+def betainc(a: float, b: float, x: float) -> float:
+    """Regularised incomplete beta ``I_x(a, b)``.
+
+    Related to the binomial tail by the exact identity
+
+        ``P(X >= k) = I_p(k, n - k + 1)``     for ``X ~ Binomial(n, p)``
+
+    which is why this belongs in a module with no beta functions in its
+    original design: it lets :func:`clopper_pearson` invert the binomial tail
+    without summing it.  The symmetry ``I_x(a,b) = 1 - I_{1-x}(b,a)`` is used
+    to keep the continued fraction on the side where it converges quickly.
+    """
+    if x <= 0.0:
+        return 0.0
+    if x >= 1.0:
+        return 1.0
+    log_front = (math.lgamma(a + b) - math.lgamma(a) - math.lgamma(b)
+                 + a * math.log(x) + b * math.log1p(-x))
+    front = math.exp(log_front)
+    if x < (a + 1.0) / (a + b + 2.0):
+        return min(1.0, front * _betacf(a, b, x) / a)
+    return max(0.0, 1.0 - front * _betacf(b, a, 1.0 - x) / b)
+
+
+def beta_ppf(q: float, a: float, b: float) -> float:
+    """Inverse of :func:`betainc` in ``x``, by bisection.
+
+    ``I_x(a, b)`` is strictly increasing in ``x``, so bisection is safe and
+    needs no starting guess.  It exits once the bracket stops shrinking in
+    double precision, which happens after about sixty steps; the iteration cap
+    is a guard, not the normal path.
+    """
+    lo, hi = 0.0, 1.0
+    for _ in range(200):
+        mid = 0.5 * (lo + hi)
+        if mid <= lo or mid >= hi:        # bracket exhausted at this precision
+            break
+        if betainc(a, b, mid) < q:
+            lo = mid
+        else:
+            hi = mid
+    return 0.5 * (lo + hi)
+
+
 def clopper_pearson(k: int, n: int, alpha: float = 0.05) -> Tuple[float, float]:
     """Exact (conservative) confidence interval for a binomial proportion.
 
     Obtained by inverting the exact binomial test: the lower limit is the ``p``
     for which ``P(X >= k) = alpha/2`` and the upper limit the ``p`` for which
-    ``P(X <= k) = alpha/2``.  Solved by bisection, so it needs no beta-function
-    implementation and has no small-sample approximation error.  Used for
-    calibrating the noise floor, where being conservative is the whole point.
+    ``P(X <= k) = alpha/2``.  There is no small-sample approximation anywhere
+    in it, which is the point -- the engine's interesting samples are the small
+    ones, and a normal approximation reports ``[0, 0]`` for zero mismatches out
+    of thirty, which would certify a channel nobody has really looked at.
+
+    Both limits are quantiles of a Beta distribution, by the identity in
+    :func:`betainc`::
+
+        low  = BetaInv(alpha/2;   k,     n - k + 1)
+        high = BetaInv(1-alpha/2; k + 1, n - k)
+
+    That formulation is what makes this affordable.  Inverting the binomial
+    tail by summing it costs ``O(n)`` log-gamma calls *per bisection step*; at
+    ``n = 384`` one interval came to roughly sixty thousand of them, and a
+    single analysis asks for about eighty intervals.  Through the continued
+    fraction the cost no longer depends on ``n`` at all.  The value is the
+    same to the last couple of bits -- :meth:`tests.test_detect.TestEstimators`
+    pins it against a direct summation of the binomial tail.
     """
     if n <= 0:
         return 0.0, 1.0
     if not 0.0 < alpha < 1.0:
         raise ValueError("alpha must lie in (0, 1)")
     half = alpha / 2.0
-
-    def bisect(f, lo: float, hi: float) -> float:
-        for _ in range(200):
-            mid = 0.5 * (lo + hi)
-            if f(mid) > 0.0:
-                hi = mid
-            else:
-                lo = mid
-        return 0.5 * (lo + hi)
-
-    low = 0.0 if k == 0 else bisect(lambda p: binom_sf(k, n, p) - half, 0.0, 1.0)
-    high = 1.0 if k == n else bisect(lambda p: half - binom_cdf(k, n, p), 0.0, 1.0)
+    low = 0.0 if k == 0 else beta_ppf(half, k, n - k + 1)
+    high = 1.0 if k == n else beta_ppf(1.0 - half, k + 1, n - k)
     return low, high
 
 
@@ -562,39 +647,98 @@ class CUSUMState:
 
 @dataclass
 class CUSUM:
-    """One-sided cumulative-sum monitor for slow drift in the error rate.
+    """Page's cumulative-sum monitor for a sustained shift from ``p0`` to ``p1``.
 
-    Catches the patient adversary who does not attack any single session hard
-    enough to trip a per-session test but pushes the error rate slightly up
-    over many sessions -- and equally, catches hardware quietly degrading.
-    The reference value ``k`` is the midpoint between the calibrated rate and
-    the rate worth detecting, which is the classical optimal choice for
-    detecting a shift of that size.
+    Catches the patient adversary who never pushes a single session over a
+    threshold but leans on the error rate continuously -- and equally, catches
+    hardware quietly degrading.  Where the SPRT asks "has the whole run been
+    generated by ``p1`` rather than ``p0``", the CUSUM asks "did the rate
+    *change* partway through", by resetting to zero whenever the accumulated
+    evidence goes negative.
+
+    The increment is the per-observation log-likelihood ratio
+
+        ``llr(x) = x log(p1/p0) + (1-x) log((1-p1)/(1-p0))``
+
+    and the statistic is ``S_i = max(0, S_{i-1} + llr(x_i))``, with an alarm
+    the first time ``S_i > threshold_h``.  This is the classical Page
+    formulation, and by Lorden's theorem it minimises the worst-case expected
+    delay to detection among all monitors with the same false-alarm rate.
+
+    **Feed it raw outcomes, not a running average.**  The observations must be
+    the individual ``0/1`` results.  Passing a cumulative error rate instead
+    makes the increments strongly autocorrelated -- once the running mean is
+    above the reference it stays there for many steps -- so the statistic
+    drifts up on honest data and the false-alarm rate stops bearing any
+    relation to ``threshold_h``.
+
+    Calibrating ``threshold_h``
+    ---------------------------
+    Under the null each excursion is a random walk with negative drift, and
+    the exponential tilt that solves ``E_0[e**(theta*llr)] = 1`` is exactly
+    ``theta = 1``, since ``sum_x P0(x) (P1(x)/P0(x)) = sum_x P1(x) = 1``.
+    Wald's inequality then bounds the chance that any one excursion ever
+    reaches ``h`` by ``e**-h``, and there are at most ``n`` restart points in
+    ``n`` observations, so
+
+        ``P(alarm within n) <= n e**-h``
+
+    giving ``h = ln(n / alpha)`` -- see :meth:`for_window`.  The union bound
+    ignores the overlap between excursions, so the true rate is comfortably
+    below ``alpha``; the bound errs toward not alarming, which is the correct
+    direction for a monitor whose alarms are read as evidence.
     """
 
     p0: float
     p1: float
     threshold_h: float = 5.0
 
+    def __post_init__(self) -> None:
+        if not 0.0 < self.p0 < self.p1 < 1.0:
+            raise ValueError(
+                f"CUSUM needs 0 < p0 < p1 < 1, got p0={self.p0} p1={self.p1}")
+
+    @classmethod
+    def for_window(cls, p0: float, p1: float, n: int,
+                   alpha: float = 1e-3) -> "CUSUM":
+        """Threshold set so the false-alarm probability over ``n`` is ``<= alpha``.
+
+        Derived, not tuned: ``h = ln(n/alpha)`` from the Wald-plus-union-bound
+        argument above.  Every input is declared before the run.
+        """
+        if n <= 0:
+            raise ValueError("CUSUM.for_window needs n >= 1")
+        if not 0.0 < alpha < 1.0:
+            raise ValueError("alpha must lie in (0, 1)")
+        return cls(p0=p0, p1=p1, threshold_h=math.log(n / alpha))
+
     @property
     def k(self) -> float:
+        """Midpoint of the two rates -- reported, not used by the update."""
         return 0.5 * (self.p0 + self.p1)
+
+    def llr(self, x: float) -> float:
+        """Log-likelihood ratio contributed by one observation."""
+        x = 1.0 if x else 0.0
+        return (x * math.log(self.p1 / self.p0)
+                + (1.0 - x) * math.log((1.0 - self.p1) / (1.0 - self.p0)))
 
     def start(self) -> CUSUMState:
         return CUSUMState()
 
-    def update(self, state: CUSUMState, rate: float) -> CUSUMState:
+    def update(self, state: CUSUMState, outcome: float) -> CUSUMState:
+        """Feed one raw outcome (``0``/``1`` or a bool)."""
         state.n += 1
-        state.s = max(0.0, state.s + (rate - self.k))
+        state.s = max(0.0, state.s + self.llr(outcome))
         state.trajectory.append(state.s)
-        if state.alarm_at is None and state.s > self.threshold_h * (self.p1 - self.p0):
+        if state.alarm_at is None and state.s > self.threshold_h:
             state.alarm_at = state.n
         return state
 
-    def run(self, rates: Iterable[float]) -> CUSUMState:
+    def run(self, outcomes: Iterable[float]) -> CUSUMState:
         state = self.start()
-        for r in rates:
-            self.update(state, r)
+        for x in outcomes:
+            self.update(state, x)
         return state
 
 
