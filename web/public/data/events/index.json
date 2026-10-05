@@ -1,0 +1,82 @@
+{
+ "generated_at": 1791169144.3172152,
+ "scenarios": [
+  {
+   "scenario": "honest-lab",
+   "label": "Honest link",
+   "verdict": "clean",
+   "events": 19,
+   "alerts": 0,
+   "warnings": 0,
+   "info": 19
+  },
+  {
+   "scenario": "intercept-resend",
+   "label": "Intercept and resend",
+   "verdict": "compromised",
+   "events": 21,
+   "alerts": 7,
+   "warnings": 0,
+   "info": 14
+  },
+  {
+   "scenario": "intercept-resend-partial",
+   "label": "Intercept and resend, half the rounds",
+   "verdict": "compromised",
+   "events": 20,
+   "alerts": 5,
+   "warnings": 0,
+   "info": 15
+  },
+  {
+   "scenario": "basis-biased",
+   "label": "Basis-biased probe",
+   "verdict": "compromised",
+   "events": 20,
+   "alerts": 5,
+   "warnings": 0,
+   "info": 15
+  },
+  {
+   "scenario": "collective-depolarizing",
+   "label": "Collective depolarising probe",
+   "verdict": "clean",
+   "events": 19,
+   "alerts": 0,
+   "warnings": 0,
+   "info": 19
+  },
+  {
+   "scenario": "coherent-probe",
+   "label": "Coherent probe with delayed measurement",
+   "verdict": "clean",
+   "events": 19,
+   "alerts": 0,
+   "warnings": 0,
+   "info": 19
+  },
+  {
+   "scenario": "entanglement-breaking",
+   "label": "Entanglement-breaking channel",
+   "verdict": "compromised",
+   "events": 21,
+   "alerts": 7,
+   "warnings": 0,
+   "info": 14
+  },
+  {
+   "scenario": "degraded-link",
+   "label": "Degraded link, no adversary",
+   "verdict": "compromised",
+   "events": 19,
+   "alerts": 2,
+   "warnings": 0,
+   "info": 17
+  }
+ ],
+ "totals": {
+  "scenarios": 8,
+  "events": 158,
+  "alerts": 26
+ }
+}
