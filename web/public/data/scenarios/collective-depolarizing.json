@@ -33,8 +33,8 @@
   "predicted_qber": 0.012397223954321968,
   "matches_declared_spec": true
  },
- "generated_at": 1790682482.3899581,
- "wall_seconds": 6.584819454000353,
+ "generated_at": 1791133676.2516556,
+ "wall_seconds": 1.7425164410014986,
  "session": {
   "config": {
    "signer": "alice",
@@ -224,7 +224,7 @@
    "checks": 384,
    "counter": 1,
    "nonce": "3d2a798cf0e1b02e1fa625d4f8ee547a",
-   "timestamp": 1790682481.7264025,
+   "timestamp": 1791133676.0746448,
    "recipients": [
     "bob",
     "charlie"
@@ -232,11 +232,11 @@
    "mac_tags": {
     "bob": {
      "index": 1,
-     "tag": "f17c06528a200b7f"
+     "tag": "29208b748f95ad6b"
     },
     "charlie": {
      "index": 1,
-     "tag": "718862630ba97be6"
+     "tag": "bb906205f0e923c0"
     }
    },
    "declaration_bytes": 732
@@ -362,7 +362,7 @@
      "forgery_blind": 99.42977166686694,
      "repudiation": 7.97395818213584
     },
-    "elapsed_seconds": 0.09256620799988013
+    "elapsed_seconds": 0.024327615996298846
    }
   },
   "transfers": {
@@ -488,17 +488,17 @@
      "forgery_blind": 102.8821942941887,
      "repudiation": 8.25083173012667
     },
-    "elapsed_seconds": 0.08971518799990008
+    "elapsed_seconds": 0.024103543000819627
    }
   },
   "timings": {
-   "enrol": 0.5853002709995963,
-   "distribute": 4.959509321000041,
-   "symmetrise": 0.011954621999848314,
-   "calibrate": 0.36440444099980596,
-   "sign": 0.01763072199992166,
-   "verify:bob:accept": 0.09258393399977649,
-   "verify:charlie:transfer": 0.08983255200018903
+   "enrol": 0.26148844900308177,
+   "distribute": 1.1757082840049407,
+   "symmetrise": 0.004309305004426278,
+   "calibrate": 0.12397735800186638,
+   "sign": 0.007219609004096128,
+   "verify:bob:accept": 0.024334144000022206,
+   "verify:charlie:transfer": 0.02410872600012226
   }
  },
  "detection": {
@@ -945,6 +945,6 @@
   },
   "signer": "alice",
   "key_id": "pk-5eab5ff8",
-  "elapsed_seconds": 0.01431197300007625
+  "elapsed_seconds": 0.004609753996192012
  }
 }

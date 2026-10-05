@@ -36,22 +36,23 @@ engine/        the protocol, the physics simulation, and the detection engine (P
     backends/          two state-vector backends: numpy (reference) + qiskit (validation)
     protocol/          keys, distribution, signing, verification, auth, session
     detect/            the eleven tests, thresholds, estimators, attribution engine
-    attacks/           adversary suite — SPECIFIED; implementation in progress
-    metrics/           ground-truth metrics — SPECIFIED (stub)
-  tests/               unittest suite (177 tests)
-web/           the analytics dashboard
+    attacks/           adversary suite — 5 families, 24 variants (built)
+    cli.py             command-line entry point: python3 -m qds (built)
+    metrics/           ground-truth metrics — specified (stub)
+  tests/               unittest suite (276 tests, 2 skipped)
+web/           the analytics dashboard (Next.js, built)
   lib/                 TypeScript data contract + loaders + formatting (built)
   public/data/         committed engine output: index + 8 scenarios (built)
   scripts/             generate_snapshots.py — regenerates public/data from the engine
-  app/, components/    Next.js app shell — SPECIFIED; no package.json yet
+  app/, components/    Next.js app shell + scenario pages (built)
 docs/          WHITEPAPER · ARCHITECTURE · DETECTION · THREAT_MODEL
 ```
 
 ## Status
 
-This is honest about what runs today and what is written down as a designed
-interface. Nothing in the first group is aspirational; nothing in the second
-pretends to work.
+Almost everything here runs today; one interface is written down but not yet
+built. This table says which is which, and nothing in the "built" column is
+aspirational.
 
 | Component | State |
 |---|---|
@@ -60,22 +61,22 @@ pretends to work.
 | Detection: 11 tests, thresholds, estimators, attribution | **built**, tested |
 | NumPy backend | **built**, tested |
 | Qiskit backend + cross-validation | **built**; skips when Qiskit absent |
-| Test suite | **177 tests, 2 skipped** (the two are the Qiskit cross-checks) |
+| Test suite | **276 tests, 2 skipped** (the two are the Qiskit cross-checks) |
 | Dashboard data contract, loaders, snapshots | **built** — real engine output in `web/public/data` |
 | Snapshot generator | **built** — one command reproduces the whole dataset |
-| Next.js app shell (`web/app`, `package.json`, build config) | **specified**, not built — no runnable app yet |
-| Dashboard components (`web/components`) | **specified**; implementation in progress |
-| Attack suite (`qds/attacks`) | **specified**; implementation in progress |
-| Ground-truth metrics (`qds/metrics`) | **specified** (stub) |
+| Next.js app shell (`web/app`, `package.json`, build config) | **built** — static export, opt-in live mode |
+| Dashboard components (`web/components`) | **built** |
+| Attack suite (`qds/attacks`) | **built**, tested — 5 families, 24 variants |
+| Command-line interface (`qds/cli.py`, `python3 -m qds`) | **built**, tested |
+| Ground-truth metrics (`qds/metrics`) | **specified** (stub) — the one unbuilt interface |
 
-The specified interfaces are documented as designed in `docs/ARCHITECTURE.md` §8.
-Some are being implemented separately and in parallel — where a row says "in
-progress," treat the code as landing rather than finished: it is not yet wired
-into the package (`qds/attacks/__init__.py` exports nothing) or into a runnable
-app (there is no `package.json`), and nothing in it is covered by the test suite
-or by the verification behind these docs. The dashboard's *data* contract,
-however, is already real and populated, so the missing app shell is presentation,
-not substance.
+The one specified-but-unbuilt interface, `qds/metrics`, is documented as designed
+in `docs/ARCHITECTURE.md` §8; its `__init__.py` is an empty stub and nothing in it
+is covered by the test suite. Everything else in the table is wired in and tested:
+`qds/attacks/__init__.py` exports the attack catalogue, `python3 -m qds` runs, and
+`web/` is a complete Next.js app (`package.json`, `pnpm-lock.yaml`, build config)
+that produces a static export from the committed data. The dashboard's *data*
+contract was real before the shell existed, so the two were always independent.
 
 ## Requirements
 
@@ -119,7 +120,11 @@ report = analyse_session(session, declared_noise=LAB_GRADE)
 print(report.verdict, report.to_dict()["flagged"])
 PY
 
-# 3. regenerate the dashboard's data from the engine
+# 3. or drive the engine straight from the command line (run from engine/)
+python3 -m qds run --noise lab --intervention intercept_resend   # one judged session
+python3 -m qds selfcheck                                         # every attack trips its detector (exit != 0 if not)
+
+# 4. regenerate the dashboard's data from the engine  (run from the repo root)
 python3 web/scripts/generate_snapshots.py
 ```
 

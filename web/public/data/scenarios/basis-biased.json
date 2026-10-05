@@ -2,7 +2,7 @@
  "id": "basis-biased",
  "label": "Basis-biased probe",
  "family": "attack",
- "blurb": "Disturbance aimed almost entirely at the X basis. Pooling the two bases halves the apparent damage, so this is the attack a single-number threshold is worst at seeing and the per-basis test exists to catch.",
+ "blurb": "An asymmetric Pauli-X probe (p_X=0.12, p_Z=0): the error lands almost entirely on the Z-basis checks while the X basis stays near zero. A milder version hides inside the pooled rate and only the per-basis test sees it; at this strength the pooled rate also crosses the acceptance threshold, and the per-basis test names the asymmetry.",
  "expectation": "suspicious",
  "seed": 14,
  "intervention": {
@@ -34,8 +34,8 @@
   "predicted_qber": 0.012397223954321968,
   "matches_declared_spec": true
  },
- "generated_at": 1790682475.7754495,
- "wall_seconds": 6.2199482969999735,
+ "generated_at": 1791133674.5048065,
+ "wall_seconds": 1.7202367699937895,
  "session": {
   "config": {
    "signer": "alice",
@@ -228,7 +228,7 @@
    "checks": 384,
    "counter": 1,
    "nonce": "5f23b96fd85ce2f3a609bb755228ccfa",
-   "timestamp": 1790682475.1680324,
+   "timestamp": 1791133674.3152804,
    "recipients": [
     "bob",
     "charlie"
@@ -236,11 +236,11 @@
    "mac_tags": {
     "bob": {
      "index": 1,
-     "tag": "ad7d471002cb297c"
+     "tag": "6daeaa1eab95acc4"
     },
     "charlie": {
      "index": 1,
-     "tag": "6824171c469c019b"
+     "tag": "7b1ab08dfd95ec49"
     }
    },
    "declaration_bytes": 732
@@ -368,7 +368,7 @@
      "forgery_blind": 103.91792108238525,
      "repudiation": 8.333893794523917
     },
-    "elapsed_seconds": 0.0778499009998086
+    "elapsed_seconds": 0.025556897002388723
    }
   },
   "transfers": {
@@ -494,17 +494,17 @@
      "forgery_blind": 105.6441323960461,
      "repudiation": 8.47233056851933
     },
-    "elapsed_seconds": 0.07085724399985338
+    "elapsed_seconds": 0.025337140999909025
    }
   },
   "timings": {
-   "enrol": 0.6985436089998984,
-   "distribute": 4.558729886000037,
-   "symmetrise": 0.011445913999978075,
-   "calibrate": 0.34402255799977866,
-   "sign": 0.011015744999895105,
-   "verify:bob:accept": 0.07787084200026584,
-   "verify:charlie:transfer": 0.07087061700030972
+   "enrol": 0.23548031099926447,
+   "distribute": 1.163842208996357,
+   "symmetrise": 0.004359575003036298,
+   "calibrate": 0.12704209799994715,
+   "sign": 0.00660138300008839,
+   "verify:bob:accept": 0.025562540999089833,
+   "verify:charlie:transfer": 0.02534227099386044
   }
  },
  "detection": {
@@ -531,13 +531,13 @@
    {
     "label": "elevated_channel_error",
     "matched_rule": "pooled_rate_vs_spec",
-    "rationale": "The error rate exceeds the declared noise floor by more than sampling explains, with no other detector giving the departure a shape. This is the generic finding: something is disturbing the quantum channel. An eavesdropper must produce it, but so does any degradation of the link, and at this level of evidence the framework cannot and should not choose between them.",
+    "rationale": "The error rate exceeds the declared noise floor by more than sampling explains, with no other detector giving the departure a shape. This is the generic finding: something is disturbing the quantum channel. An eavesdropper must produce it, but so does any degradation of the link, and at this level of evidence the framework cannot tell the two apart and should not pretend to. Read it as 'this link is not the link that was specified', which is actionable on its own.",
     "priority": 9
    },
    {
     "label": "sequential_onset_detected",
     "matched_rule": "sequential_onset",
-    "rationale": "A sequential monitor would have stopped this run before it finished, meaning the evidence became decisive partway through rather than only in aggregate. Read together with the stopping index, this separates a problem that was present from the first check from one that began mid-session.",
+    "rationale": "A sequential monitor would have stopped this run before it finished, meaning the evidence became decisive partway through rather than only in aggregate. Read together with the stopping index, this separates a problem that was present from the first check from one that began mid-session. It says when, not what: an adversary switching on mid-run and a detector that drifted mid-run look alike here, and an unlucky cluster of honest errors early in a short run can stop the monitor with nothing behind it.",
     "priority": 11
    }
   ],
@@ -989,6 +989,6 @@
   },
   "signer": "alice",
   "key_id": "pk-c0805e74",
-  "elapsed_seconds": 0.012892265000118641
+  "elapsed_seconds": 0.004412098998727743
  }
 }

@@ -74,7 +74,7 @@ each of the Z-basis and X-basis rates is at or below the value the spec predicts
 *for that basis* (the model predicts them separately — four gate insertions reach
 a Z check, six reach an X check). *A probe that disturbs one basis more than the
 other produces exactly this pattern and can hide entirely inside a pooled rate.*
-This is the test that caught the basis-biased scenario the pooled test missed.
+This is the test that exists for exactly that regime. In the shipped basis-biased scenario the bias is strong enough that the pooled rate crosses the floor as well, so here the per-basis split corroborates and localises the excess rather than being the only test to see it.
 
 **4. `position_homogeneity` — error rate across message-bit positions.** Null: all
 message-bit positions share one rate. A chi-square homogeneity test. *Honest noise
@@ -241,7 +241,7 @@ checks), judged against the declared lab-grade sheet:
 | `degraded-link` | compromised | 0.0199 | 1/11 | channel_blocking_or_blinding |
 
 The honest run flags nothing. The strong attacks are caught decisively, the
-basis-biased probe is caught by the per-basis test that exists for it, and the
+basis-biased probe crosses the acceptance threshold on its pooled rate and is corroborated by the per-basis test that names the asymmetry, and the
 innocently degraded link is caught in the *yield* rather than the error rate —
 the distinction the whole design exists to preserve.
 

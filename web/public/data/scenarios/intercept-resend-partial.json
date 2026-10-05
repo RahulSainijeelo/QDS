@@ -33,8 +33,8 @@
   "predicted_qber": 0.012397223954321968,
   "matches_declared_spec": true
  },
- "generated_at": 1790682469.50482,
- "wall_seconds": 9.44288227800007,
+ "generated_at": 1791133672.779387,
+ "wall_seconds": 2.0117826130008325,
  "session": {
   "config": {
    "signer": "alice",
@@ -227,7 +227,7 @@
    "checks": 384,
    "counter": 1,
    "nonce": "ae357a801ecbf472b7c41b67ff6b4a84",
-   "timestamp": 1790682468.4552078,
+   "timestamp": 1791133672.5714045,
    "recipients": [
     "bob",
     "charlie"
@@ -235,11 +235,11 @@
    "mac_tags": {
     "bob": {
      "index": 1,
-     "tag": "5ee8066e7a6a3300"
+     "tag": "160a3f3eaff1e5d9"
     },
     "charlie": {
      "index": 1,
-     "tag": "765b468e0bfab69b"
+     "tag": "b43603ffb94a3980"
     }
    },
    "declaration_bytes": 732
@@ -367,7 +367,7 @@
      "forgery_blind": 99.08452940413476,
      "repudiation": 7.946270827336758
     },
-    "elapsed_seconds": 0.2012466900000618
+    "elapsed_seconds": 0.024219777995313052
    }
   },
   "transfers": {
@@ -493,17 +493,17 @@
      "forgery_blind": 100.46549845506347,
      "repudiation": 8.05702024653309
     },
-    "elapsed_seconds": 0.18989399200017942
+    "elapsed_seconds": 0.0266301969968481
    }
   },
   "timings": {
-   "enrol": 0.6565617199998997,
-   "distribute": 7.442161010000291,
-   "symmetrise": 0.013851226000042516,
-   "calibrate": 0.28045071499991536,
-   "sign": 0.016076588000032643,
-   "verify:bob:accept": 0.20129096799973922,
-   "verify:charlie:transfer": 0.18993609700009983
+   "enrol": 0.2414891149965115,
+   "distribute": 1.4345045800000662,
+   "symmetrise": 0.00430308400245849,
+   "calibrate": 0.1234772090028855,
+   "sign": 0.0065151919989148155,
+   "verify:bob:accept": 0.02422564599692123,
+   "verify:charlie:transfer": 0.0266371399993659
   }
  },
  "detection": {
@@ -530,13 +530,13 @@
    {
     "label": "elevated_channel_error",
     "matched_rule": "pooled_rate_vs_spec",
-    "rationale": "The error rate exceeds the declared noise floor by more than sampling explains, with no other detector giving the departure a shape. This is the generic finding: something is disturbing the quantum channel. An eavesdropper must produce it, but so does any degradation of the link, and at this level of evidence the framework cannot and should not choose between them.",
+    "rationale": "The error rate exceeds the declared noise floor by more than sampling explains, with no other detector giving the departure a shape. This is the generic finding: something is disturbing the quantum channel. An eavesdropper must produce it, but so does any degradation of the link, and at this level of evidence the framework cannot tell the two apart and should not pretend to. Read it as 'this link is not the link that was specified', which is actionable on its own.",
     "priority": 9
    },
    {
     "label": "sequential_onset_detected",
     "matched_rule": "sequential_onset",
-    "rationale": "A sequential monitor would have stopped this run before it finished, meaning the evidence became decisive partway through rather than only in aggregate. Read together with the stopping index, this separates a problem that was present from the first check from one that began mid-session.",
+    "rationale": "A sequential monitor would have stopped this run before it finished, meaning the evidence became decisive partway through rather than only in aggregate. Read together with the stopping index, this separates a problem that was present from the first check from one that began mid-session. It says when, not what: an adversary switching on mid-run and a detector that drifted mid-run look alike here, and an unlucky cluster of honest errors early in a short run can stop the monitor with nothing behind it.",
     "priority": 11
    }
   ],
@@ -990,6 +990,6 @@
   },
   "signer": "alice",
   "key_id": "pk-45648f9f",
-  "elapsed_seconds": 0.015468632000192883
+  "elapsed_seconds": 0.004769715000293218
  }
 }

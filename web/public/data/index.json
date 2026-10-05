@@ -1,5 +1,5 @@
 {
- "generated_at": 1790682493.2798765,
+ "generated_at": 1791133681.9775548,
  "geometry": {
   "message_bits": 16,
   "L": 24,
@@ -50,7 +50,7 @@
    "protocol_rejects": false,
    "authentication_failed": false,
    "combined_p_value": 0.23084419360911484,
-   "wall_seconds": 7.006490393000149
+   "wall_seconds": 1.6969692610000493
   },
   {
    "id": "intercept-resend",
@@ -82,7 +82,7 @@
    "protocol_rejects": true,
    "authentication_failed": false,
    "combined_p_value": 1.5978941961234816e-208,
-   "wall_seconds": 7.942750547999822
+   "wall_seconds": 2.363010713001131
   },
   {
    "id": "intercept-resend-partial",
@@ -113,13 +113,13 @@
    "protocol_rejects": true,
    "authentication_failed": false,
    "combined_p_value": 1.317514800243516e-86,
-   "wall_seconds": 9.44288227800007
+   "wall_seconds": 2.0117826130008325
   },
   {
    "id": "basis-biased",
    "label": "Basis-biased probe",
    "family": "attack",
-   "blurb": "Disturbance aimed almost entirely at the X basis. Pooling the two bases halves the apparent damage, so this is the attack a single-number threshold is worst at seeing and the per-basis test exists to catch.",
+   "blurb": "An asymmetric Pauli-X probe (p_X=0.12, p_Z=0): the error lands almost entirely on the Z-basis checks while the X basis stays near zero. A milder version hides inside the pooled rate and only the per-basis test sees it; at this strength the pooled rate also crosses the acceptance threshold, and the per-basis test names the asymmetry.",
    "expectation": "suspicious",
    "intervention": "basis_biased",
    "verdict": "compromised",
@@ -144,7 +144,7 @@
    "protocol_rejects": true,
    "authentication_failed": false,
    "combined_p_value": 1.0010387434957674e-61,
-   "wall_seconds": 6.2199482969999735
+   "wall_seconds": 1.7202367699937895
   },
   {
    "id": "collective-depolarizing",
@@ -171,7 +171,7 @@
    "protocol_rejects": false,
    "authentication_failed": false,
    "combined_p_value": 0.02953062129024148,
-   "wall_seconds": 6.584819454000353
+   "wall_seconds": 1.7425164410014986
   },
   {
    "id": "coherent-probe",
@@ -198,7 +198,7 @@
    "protocol_rejects": false,
    "authentication_failed": false,
    "combined_p_value": 0.006076649565917827,
-   "wall_seconds": 4.9812470159999975
+   "wall_seconds": 1.9871880640057498
   },
   {
    "id": "entanglement-breaking",
@@ -230,7 +230,7 @@
    "protocol_rejects": true,
    "authentication_failed": false,
    "combined_p_value": 0.0,
-   "wall_seconds": 2.8885275079996973
+   "wall_seconds": 2.0539500169979874
   },
   {
    "id": "degraded-link",
@@ -259,7 +259,7 @@
    "protocol_rejects": false,
    "authentication_failed": false,
    "combined_p_value": 3.2872308034150026e-264,
-   "wall_seconds": 2.954524579000008
+   "wall_seconds": 1.6666556600030162
   }
  ]
 }

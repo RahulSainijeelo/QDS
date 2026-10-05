@@ -15,8 +15,9 @@ Available backends
 ``qiskit``
     The same operations expressed with :mod:`qiskit.quantum_info`
     (``DensityMatrix``, ``Operator``, ``Kraus``).  Requires ``pip install
-    qiskit``.  Run ``python -m qds.cli selfcheck --cross-validate`` to confirm
-    the two backends agree to machine precision.
+    qiskit``.  The Qiskit cross-validation tests in ``tests/test_backends.py``
+    confirm the two backends agree to machine precision; they run when Qiskit
+    is installed and skip otherwise.
 """
 
 from __future__ import annotations

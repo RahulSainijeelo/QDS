@@ -128,10 +128,11 @@ SCENARIOS: List[Scenario] = [
     ),
     Scenario(
         "basis-biased", "Basis-biased probe", "attack",
-        "Disturbance aimed almost entirely at the X basis. Pooling the two "
-        "bases halves the apparent damage, so this is the attack a "
-        "single-number threshold is worst at seeing and the per-basis test "
-        "exists to catch.",
+        "An asymmetric Pauli-X probe (p_X=0.12, p_Z=0): the error lands almost "
+        "entirely on the Z-basis checks while the X basis stays near zero. A "
+        "milder version hides inside the pooled rate and only the per-basis "
+        "test sees it; at this strength the pooled rate also crosses the "
+        "acceptance threshold, and the per-basis test names the asymmetry.",
         "suspicious", seed=14,
         intervention="basis_biased", intervention_kwargs={"pz": 0.0, "px": 0.12},
     ),

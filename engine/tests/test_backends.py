@@ -197,8 +197,9 @@ class TestBackendContract(unittest.TestCase):
 class TestCrossValidation(unittest.TestCase):
     """Element-by-element agreement between numpy and Qiskit.
 
-    Skipped when Qiskit is not installed.  ``python -m qds.cli selfcheck
-    --cross-validate`` runs the same comparison over the whole protocol.
+    Skipped when Qiskit is not installed.  These cases *are* the
+    cross-validation: they re-run the same operations over random circuits and
+    measurement statistics on both backends and assert agreement to 1e-12.
     """
 
     def test_random_circuits_agree(self):

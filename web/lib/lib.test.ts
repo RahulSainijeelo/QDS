@@ -5,7 +5,7 @@
  *
  * This is the one part of the dashboard this environment can genuinely run,
  * so it is where the verification effort goes. The React and Next layers are
- * checked by `next build` on the user's machine (see BUILD.md); everything
+ * checked by `pnpm build` on the user's machine (see README.md); everything
  * that can be a pure function lives here and is tested here, against the real
  * snapshots that `generate_snapshots.py` produced -- not fixtures, not mocks.
  *

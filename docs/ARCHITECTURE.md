@@ -34,10 +34,10 @@ the dependency never runs the other way.
                                |
    engine/qds/
    +---------------------+   +-----------------------------+
-   |  detect/            |   |  attacks/   (step 2 — spec) |
-   |  statistics-only    |   |  metrics/   (step — spec)   |
-   |  threat detection   |   +-----------------------------+
-   +---------------------+
+   |  detect/            |   |  attacks/   (built)         |
+   |  statistics-only    |   |  cli.py     (built)         |
+   |  threat detection   |   |  metrics/   (spec)          |
+   +---------------------+   +-----------------------------+
             ^   consumes only Evidence
             |
    +-------------------------------------------------------+
@@ -186,18 +186,20 @@ ladder. `rules.py` is the eleven detectors, one null hypothesis each. `engine.py
 is the `Evidence` boundary, the runner, the attribution table, and the verdict.
 The short path for a caller is `analyse_session(session, declared_noise=...)`.
 
-### 2.6 `attacks/` and `metrics/` — specified interfaces
+### 2.6 `metrics/` — the one specified-but-unbuilt interface
 
 `engine/qds/metrics/__init__.py` is an empty stub: the package intended to
-aggregate information-gain-versus-disturbance curves is not implemented.
-`engine/qds/attacks/` is being implemented separately and in parallel — modules
-such as `forgery.py` and `harness.py` are landing beside an as-yet-empty package
-`__init__.py`, so treat it as in progress rather than finished. The adversarial
-*interventions* it orchestrates already exist (in `channel.py`); the `attacks/`
-package is the campaign layer over them. See §8 for the specified interface. Treat
-anything described there as the contract the implementation must satisfy, and note
-that nothing in `attacks/` is yet wired into the package or covered by the test
-suite.
+aggregate information-gain-versus-disturbance curves over a campaign is not yet
+implemented. It is the sole module in the engine that is still a specification
+rather than code; §8 states the contract its implementation must satisfy.
+
+`attacks/` is no longer in that category — it is built and tested.
+`attacks/__init__.py` exports the catalogue (`CATALOGUE`, `FAMILIES`, `mount`,
+`run_all`), and the package (`forgery.py`, `impersonation.py`, `manipulation.py`,
+`replay.py`, `repudiation.py`, with `harness.py`) orchestrates five attack
+families as real protocol runs over the adversarial *interventions* that already
+live in `channel.py`. The command-line front-end `cli.py` drives both the suite
+and the detection engine; see §8.
 
 ---
 
@@ -335,41 +337,36 @@ rejects them. Both are handled by `_scrub`/`_plain` in the generator.
 
 **Status of the dashboard.** The data contract is real and populated: `index.json`
 and eight `scenarios/*.json` exist, and the TypeScript layer that reads them
-(`web/lib`) is built. The Next.js application proper — `web/app`, plus the
-`web/components` being authored in parallel — is not yet runnable: there is no
-`package.json` or build config. See `web/README.md`.
+(`web/lib`) is built. The Next.js application proper — `web/app` and the
+`web/components` — is built as well: `package.json`, `pnpm-lock.yaml`,
+`next.config.mjs`, and `tsconfig.json` are present, `next build` produces a static
+export (`out/`), and an opt-in live mode (`QDS_LIVE=1`) exposes a single on-demand
+engine endpoint. See `web/README.md`.
 
 ---
 
-## 8. Specified-but-unbuilt interfaces
+## 8. The specified-but-unbuilt interface
 
-Per the project plan, three components are documented here as the interface the
-eventual implementation must satisfy. Some are being implemented separately and in
-parallel; nothing below should be taken as verified working code. The descriptions
-are the contract, and where implementation has begun it is not yet wired into the
-package or covered by the test suite.
+One component remains documented here as the interface its eventual
+implementation must satisfy, rather than as working code: `qds.metrics`. The
+attack suite and the command-line front-end, formerly in this section, are now
+built and tested — see §2.6 and the note below.
 
-**`qds.attacks` (step 2).** A campaign orchestration layer over the existing
-`channel.Intervention` subclasses. The intended entry point runs a scenario
-across a sweep of intervention strengths, collects the `DetectionReport` from
-each, and emits an information-gain-versus-detection curve. The interventions it
-drives already exist and are tested; what is missing is the campaign loop and the
-aggregation. The eight scenarios currently hard-coded in `generate_snapshots.py`
-are effectively a hand-written instance of what this package should generate.
+**`qds.metrics`.** Aggregate figures of merit over a campaign: the disturbance an
+attack induces against the information it gains, the detection probability as a
+function of key length `N`, and the false-alarm rate under the declared null. The
+whitepaper §8.2 notes that two weak attacks currently evade detection at
+`N ≈ 590`; quantifying the detection-versus-`N` curve is exactly what this package
+is for. Its `__init__.py` is an empty stub today.
 
-**`qds.metrics` (step —).** Aggregate figures of merit over a campaign: the
-disturbance an attack induces against the information it gains, the detection
-probability as a function of key length `N`, and the false-alarm rate under the
-declared null. The whitepaper §8.2 notes that two weak attacks currently evade
-detection at `N ≈ 590`; quantifying the detection-versus-`N` curve is exactly
-what this package is for.
-
-**`qds.cli` (step 4).** A command-line entry point. The backends module already
-references `python -m qds.cli selfcheck --cross-validate` in its documentation,
-so that subcommand is part of the intended surface: it should instantiate every
-available backend and assert agreement to `1e-12`. The snapshot generator is a
-second natural subcommand. Until the CLI exists, `generate_snapshots.py` is run
-directly and cross-validation is unavailable because Qiskit is not installed.
+**Now built — `qds.attacks` and `qds.cli`.** The attack suite is the campaign
+layer over the `channel.Intervention` subclasses: five families (`forgery`,
+`impersonation`, `replay`, `channel`, `repudiation`) spanning 24 variants, each
+mounted as a real protocol run and judged by the engine on the unprivileged
+transcript. `qds.cli` (`python3 -m qds`) is a thin front-end over that suite and
+the detection engine, with subcommands `list`, `run`, `attack`, `sweep`,
+`selfcheck`, and `bench`; `selfcheck` exits non-zero if any attack diverges from
+its declared expectation. Both are covered by the test suite.
 
 ---
 
@@ -382,7 +379,7 @@ with
 cd engine && python3 -m unittest discover -s tests -p 'test_*.py'
 ```
 
-It currently reports **177 passing, 2 skipped**. The two skips are the Qiskit
+It currently reports **276 passing, 2 skipped**. The two skips are the Qiskit
 cross-validation tests, which skip with "only one backend available" because
 Qiskit is not installed; they are not failures. `numpy` is the only runtime
 dependency.

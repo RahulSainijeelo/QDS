@@ -329,6 +329,16 @@ The corresponding per-check error rate is `1 - 3/4 = 1/4`, exposed as
 set against**, because a dishonest *recipient* is exactly a forger holding one
 copy. It is the reason the honest error rate must sit below `1/4`.
 
+A corollary worth stating, because the attack suite exercises it directly: `1/4`
+is the *minimum* per-check error over all single-copy strategies, not a
+representative one. A measurement tuned to maximise the forger's *information*
+rather than to minimise his disturbance — the Breidbart measurement — is
+deliberately suboptimal for passing the check, so its error rate sits strictly
+*above* the `1/4` floor. The `breidbart` variant in `qds.attacks.forgery` shows
+exactly that, measuring well clear of `single_copy`; the `3/4` of the lemma is
+therefore the forger's best case, and setting the thresholds against it is
+conservative against every other single-copy measurement.
+
 ### 5.3 The teleportation transcript leaks nothing
 
 > **Proposition 1.** For every BB84 input state, the joint distribution of the
@@ -662,11 +672,17 @@ transfer-threshold test, but rate-vs-spec, basis consistency and sequential
 onset all still fired. The entanglement-breaking channel at 0.3203 exceeds even
 the blind-forger rate in one basis and is trivially visible.
 
-The basis-biased probe is the clearest vindication of test 3. Disturbance aimed
-almost entirely at the X basis produced a pooled rate of only 0.0873; pooling
-halves the apparent damage, and a single-number threshold is at its worst here.
-The per-basis test caught it, and the run came out *stronger* than its written
-expectation.
+The basis-biased probe shows the per-basis test earning its place. An asymmetric
+Pauli-X probe (`p_X = 0.12`, `p_Z = 0`) corrupts the Z-basis checks almost
+exclusively, driving the Z rate to 0.1614 while the X rate stayed at 0.0069, for a
+pooled rate of 0.0873. That pooled rate already crosses
+the acceptance threshold `s_a = 0.0396`, so the signature is rejected on its rate
+alone and the engine returns `compromised` where the probe's author expected only
+`suspicious` — the single-number test is not blind here. What the per-basis test
+adds is the *shape*: `basis_consistency` fires at p ≈ 1.6e-44 and localises the
+excess to one basis, which is why the attribution carries `elevated_channel_error`
+beside the rate rejection. The per-basis test becomes the *sole* catch only at a
+milder bias, one that keeps the pooled rate under `s_a`.
 
 The degraded link is the case the design cares most about. There is no
 adversary; the fibre is dimmer and the detectors noisier than the sheet they were

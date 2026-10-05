@@ -242,11 +242,12 @@ class BasisConsistency(Rule):
     reported statistic is the *excess* asymmetry -- how much further apart the
     two rates are than the declared design says they should be.
 
-    This is the detector that catches a probe which is cheap in one basis and
-    expensive in the other. ``BasisBiasedProbe(pz=0, px=0.12)`` produces a
-    pooled rate of 6 percent, comfortably under a 10 percent threshold, while
-    the X rate sits at 12 percent and is over it. Pooling hides the attack;
-    splitting reveals it.
+    This is the detector for a probe that is cheap in one basis and expensive
+    in the other -- an asymmetry a single pooled rate can mask.  When the bias
+    is mild enough to keep the pooled rate under the acceptance threshold, this
+    is the only test that fires; when it is stronger the pooled rate crosses the
+    threshold too, and the per-basis split still earns its keep by naming the
+    asymmetry rather than reporting a uniform rise.
     """
 
     name = "basis_consistency"
