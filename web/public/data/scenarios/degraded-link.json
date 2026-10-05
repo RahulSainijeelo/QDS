@@ -1,0 +1,954 @@
+{
+ "id": "degraded-link",
+ "label": "Degraded link, no adversary",
+ "family": "hardware",
+ "blurb": "No eavesdropper. The fibre is dimmer and the detectors noisier than the sheet the thresholds were built from. A real detection with an innocent cause, and the reason the engine reports departures from specification rather than announcing attacks.",
+ "expectation": "detection without an adversary",
+ "seed": 18,
+ "intervention": {
+  "name": "none",
+  "kwargs": {},
+  "description": "Honest channel; only calibrated hardware noise is present."
+ },
+ "declared_spec": {
+  "preset": "lab",
+  "predicted_qber": 0.012397223954321968,
+  "yield": 0.78200218,
+  "transmittance": 0.92,
+  "detector_efficiency": 0.85,
+  "dark_count": 1e-05
+ },
+ "channel": {
+  "channel_depolarizing": 0.008,
+  "memory_dephasing": 0.004,
+  "gate_error": 0.001,
+  "measurement_error": 0.002,
+  "misalignment": 0.01,
+  "transmittance": 0.55,
+  "detector_efficiency": 0.7,
+  "dark_count": 5e-05,
+  "yield": 0.38503075000000003,
+  "predicted_qber": 0.012434806547786642,
+  "matches_declared_spec": false
+ },
+ "generated_at": 1791133681.9736238,
+ "wall_seconds": 1.6666556600030162,
+ "session": {
+  "config": {
+   "signer": "alice",
+   "verifiers": [
+    "bob",
+    "charlie"
+   ],
+   "message_bits": 16,
+   "L": 24,
+   "signature_slots": 768,
+   "checks_per_signature": 384,
+   "symmetrise": true,
+   "noise_floor_spec": 0.012397223954321968,
+   "calibration_alpha": 0.01,
+   "sampling_epsilon": 1e-06,
+   "threshold_rule": "balanced",
+   "distribution": {
+    "check_pairs": 64,
+    "decoy_slots": 64,
+    "storage_intervals": 1,
+    "exact": false,
+    "intervention": {
+     "name": "none",
+     "description": "Honest channel; only calibrated hardware noise is present."
+    },
+    "predicted_qber": 0.012434806547786642
+   }
+  },
+  "private_key": {
+   "signer": "alice",
+   "key_id": "pk-36ada9da",
+   "message_bits": 16,
+   "L": 24,
+   "signature_slots": 768,
+   "private_key_bits": 1536
+  },
+  "distribution": {
+   "bob": {
+    "verifier": "bob",
+    "signer": "alice",
+    "key_id": "pk-36ada9da",
+    "slots_held": 896,
+    "available": 170,
+    "check_slots": 64,
+    "decoy_slots": 64,
+    "yield_observed": 0.40848214285714285,
+    "config": {
+     "check_pairs": 64,
+     "decoy_slots": 64,
+     "storage_intervals": 1,
+     "exact": false,
+     "intervention": {
+      "name": "none",
+      "description": "Honest channel; only calibrated hardware noise is present."
+     },
+     "predicted_qber": 0.012434806547786642
+    },
+    "oracle": {
+     "check_pairs": 64,
+     "teleported_slots": 832,
+     "mean_chsh": 2.7986508803005896,
+     "mean_bell_fidelity": 0.9919929976605616,
+     "mean_concurrence": 0.9840354710080165,
+     "exact_qber": 0.00847895058684593,
+     "exact_qber_by_basis": {
+      "Z": 0.006005726726364347,
+      "X": 0.01093727550840895
+     },
+     "exact_qber_decoy": 0.009161917946872893,
+     "announcement_error_rate": 0.0,
+     "information_disturbance": {
+      "eve_trace_distance": 0.0,
+      "eve_guess_probability": 0.5,
+      "disturbance_x_basis": 0.01093727550840895,
+      "predicted_trace_distance": 0.20801587932522947
+     }
+    }
+   },
+   "charlie": {
+    "verifier": "charlie",
+    "signer": "alice",
+    "key_id": "pk-36ada9da",
+    "slots_held": 896,
+    "available": 176,
+    "check_slots": 64,
+    "decoy_slots": 64,
+    "yield_observed": 0.3716517857142857,
+    "config": {
+     "check_pairs": 64,
+     "decoy_slots": 64,
+     "storage_intervals": 1,
+     "exact": false,
+     "intervention": {
+      "name": "none",
+      "description": "Honest channel; only calibrated hardware noise is present."
+     },
+     "predicted_qber": 0.012434806547786642
+    },
+    "oracle": {
+     "check_pairs": 64,
+     "teleported_slots": 832,
+     "mean_chsh": 2.7986508803005905,
+     "mean_bell_fidelity": 0.9919929976605615,
+     "mean_concurrence": 0.9840354710080167,
+     "exact_qber": 0.011523728040491756,
+     "exact_qber_by_basis": {
+      "Z": 0.006005726726364347,
+      "X": 0.0173302522991487
+     },
+     "exact_qber_decoy": 0.008092151211075526,
+     "announcement_error_rate": 0.009554140127388535,
+     "information_disturbance": {
+      "eve_trace_distance": 0.0,
+      "eve_guess_probability": 0.5,
+      "disturbance_x_basis": 0.0173302522991487,
+      "predicted_trace_distance": 0.26099743028923905
+     }
+    }
+   }
+  },
+  "symmetrisation": {
+   "performed": true,
+   "recipients": [
+    "bob",
+    "charlie"
+   ],
+   "slots_permuted": 768,
+   "moved": 766,
+   "fraction_moved": 0.4986979166666667
+  },
+  "calibration": {
+   "bob": {
+    "verifier": "bob",
+    "decoys_measured": 25,
+    "decoy_mismatches": 0,
+    "point_estimate": 0.0,
+    "lower_confidence": 0.0,
+    "upper_confidence": 0.19098085295868683,
+    "spec_rate": 0.012397223954321968,
+    "p_value_vs_spec": 1.0,
+    "spec_violation": false,
+    "sampling_margin": 0.5473745477145147,
+    "certified_rate": 0.7383554006732015,
+    "informative": false,
+    "alpha": 0.01,
+    "sampling_epsilon": 1e-06,
+    "predicted_rate": 0.012434806547786642
+   },
+   "charlie": {
+    "verifier": "charlie",
+    "decoys_measured": 26,
+    "decoy_mismatches": 0,
+    "point_estimate": 0.0,
+    "lower_confidence": 0.0,
+    "upper_confidence": 0.18435937957449877,
+    "spec_rate": 0.012397223954321968,
+    "p_value_vs_spec": 1.0,
+    "spec_violation": false,
+    "sampling_margin": 0.537083224028603,
+    "certified_rate": 0.7214426036031018,
+    "informative": false,
+    "alpha": 0.01,
+    "sampling_epsilon": 1e-06,
+    "predicted_rate": 0.012434806547786642
+   }
+  },
+  "policy": {
+   "honest_error_rate": 0.012397223954321968,
+   "s_a": 0.039622126617503375,
+   "s_v": 0.16871541421373465,
+   "forger_error_rate": 0.25,
+   "blind_forger_error_rate": 0.5,
+   "min_checks": 16,
+   "window_seconds": 300.0,
+   "sound": true,
+   "problems": []
+  },
+  "declaration": {
+   "signer": "alice",
+   "key_id": "pk-36ada9da",
+   "message_hex": "6869",
+   "message_bits": 16,
+   "L": 24,
+   "checks": 384,
+   "counter": 1,
+   "nonce": "257e5a06d38887222c93c364c257d386",
+   "timestamp": 1791133681.8657131,
+   "recipients": [
+    "bob",
+    "charlie"
+   ],
+   "mac_tags": {
+    "bob": {
+     "index": 1,
+     "tag": "01eda5b3862cf68a"
+    },
+    "charlie": {
+     "index": 1,
+     "tag": "ec8e56b613870f62"
+    }
+   },
+   "declaration_bytes": 732
+  },
+  "verifications": {
+   "bob": {
+    "verifier": "bob",
+    "signer": "alice",
+    "key_id": "pk-36ada9da",
+    "message_hex": "6869",
+    "level": "accept",
+    "threshold": 0.039622126617503375,
+    "accepted": true,
+    "reasons": [],
+    "identity_ok": true,
+    "identity_problems": [],
+    "mac_ok": true,
+    "mac_problems": [],
+    "freshness": {
+     "ok": true,
+     "reasons": []
+    },
+    "measured": true,
+    "slots_addressed": 384,
+    "checks": 140,
+    "mismatches": 1,
+    "missing": 244,
+    "dark": 0,
+    "mismatch_rate": 0.007142857142857143,
+    "detection_yield": 0.3645833333333333,
+    "margin": -0.03247926947464623,
+    "by_basis": {
+     "Z": {
+      "mismatch": 0,
+      "checks": 74
+     },
+     "X": {
+      "mismatch": 1,
+      "checks": 66
+     }
+    },
+    "by_position": {
+     "0": {
+      "mismatch": 0,
+      "checks": 10
+     },
+     "1": {
+      "mismatch": 0,
+      "checks": 9
+     },
+     "2": {
+      "mismatch": 0,
+      "checks": 6
+     },
+     "3": {
+      "mismatch": 0,
+      "checks": 11
+     },
+     "4": {
+      "mismatch": 0,
+      "checks": 12
+     },
+     "5": {
+      "mismatch": 0,
+      "checks": 4
+     },
+     "6": {
+      "mismatch": 0,
+      "checks": 4
+     },
+     "7": {
+      "mismatch": 0,
+      "checks": 12
+     },
+     "8": {
+      "mismatch": 0,
+      "checks": 6
+     },
+     "9": {
+      "mismatch": 0,
+      "checks": 12
+     },
+     "10": {
+      "mismatch": 0,
+      "checks": 8
+     },
+     "11": {
+      "mismatch": 0,
+      "checks": 13
+     },
+     "12": {
+      "mismatch": 0,
+      "checks": 10
+     },
+     "13": {
+      "mismatch": 0,
+      "checks": 7
+     },
+     "14": {
+      "mismatch": 0,
+      "checks": 5
+     },
+     "15": {
+      "mismatch": 1,
+      "checks": 11
+     }
+    },
+    "p_value_vs_honest": 0.825609717032687,
+    "p_value_vs_forger": 1.5374169242754443e-16,
+    "clopper_pearson_95": [
+     0.00018082513476627986,
+     0.03915370831108772
+    ],
+    "failure_bounds": {
+     "honest_abort": 0.06809885120522256,
+     "forgery_one_copy": 0.06809858556039196,
+     "forgery_blind": 2.8186505771957403e-15,
+     "repudiation": 0.06809866508733359
+    },
+    "security_bits": {
+     "honest_abort": 3.8762257289016624,
+     "forgery_one_copy": 3.8762313566798183,
+     "forgery_blind": 48.333916782504765,
+     "repudiation": 3.87622967187159
+    },
+    "elapsed_seconds": 0.013894185001845472
+   }
+  },
+  "transfers": {
+   "charlie": {
+    "verifier": "charlie",
+    "signer": "alice",
+    "key_id": "pk-36ada9da",
+    "message_hex": "6869",
+    "level": "transfer",
+    "threshold": 0.16871541421373465,
+    "accepted": true,
+    "reasons": [
+     "forwarded by 'bob'"
+    ],
+    "identity_ok": true,
+    "identity_problems": [],
+    "mac_ok": true,
+    "mac_problems": [],
+    "freshness": {
+     "ok": true,
+     "reasons": []
+    },
+    "measured": true,
+    "slots_addressed": 384,
+    "checks": 162,
+    "mismatches": 5,
+    "missing": 222,
+    "dark": 0,
+    "mismatch_rate": 0.030864197530864196,
+    "detection_yield": 0.421875,
+    "margin": -0.13785121668287045,
+    "by_basis": {
+     "Z": {
+      "mismatch": 2,
+      "checks": 86
+     },
+     "X": {
+      "mismatch": 3,
+      "checks": 76
+     }
+    },
+    "by_position": {
+     "0": {
+      "mismatch": 0,
+      "checks": 7
+     },
+     "1": {
+      "mismatch": 0,
+      "checks": 9
+     },
+     "2": {
+      "mismatch": 0,
+      "checks": 12
+     },
+     "3": {
+      "mismatch": 3,
+      "checks": 11
+     },
+     "4": {
+      "mismatch": 1,
+      "checks": 12
+     },
+     "5": {
+      "mismatch": 0,
+      "checks": 11
+     },
+     "6": {
+      "mismatch": 1,
+      "checks": 10
+     },
+     "7": {
+      "mismatch": 0,
+      "checks": 11
+     },
+     "8": {
+      "mismatch": 0,
+      "checks": 7
+     },
+     "9": {
+      "mismatch": 0,
+      "checks": 15
+     },
+     "10": {
+      "mismatch": 0,
+      "checks": 7
+     },
+     "11": {
+      "mismatch": 0,
+      "checks": 7
+     },
+     "12": {
+      "mismatch": 0,
+      "checks": 12
+     },
+     "13": {
+      "mismatch": 0,
+      "checks": 12
+     },
+     "14": {
+      "mismatch": 0,
+      "checks": 9
+     },
+     "15": {
+      "mismatch": 0,
+      "checks": 10
+     }
+    },
+    "p_value_vs_honest": 0.05227934790631378,
+    "p_value_vs_forger": 2.2805454933664147e-14,
+    "clopper_pearson_95": [
+     0.01009598350950297,
+     0.07055428275232356
+    ],
+    "failure_bounds": {
+     "honest_abort": 0.04464533002314196,
+     "forgery_one_copy": 0.04464512850021292,
+     "forgery_blind": 1.4575355283645387e-17,
+     "repudiation": 0.04464518883076308
+    },
+    "security_bits": {
+     "honest_abort": 4.485346914871924,
+     "forgery_one_copy": 4.485353427015218,
+     "forgery_blind": 55.929246562612654,
+     "repudiation": 4.4853514774514105
+    },
+    "elapsed_seconds": 0.015482098999200389
+   }
+  },
+  "timings": {
+   "enrol": 0.27274127900454914,
+   "distribute": 1.162116600004083,
+   "symmetrise": 0.004253493003488984,
+   "calibrate": 0.11960638000164181,
+   "sign": 0.006619217005209066,
+   "verify:bob:accept": 0.013898657998652197,
+   "verify:charlie:transfer": 0.015488217999518383
+  }
+ },
+ "detection": {
+  "verdict": "compromised",
+  "alarm": true,
+  "combined_p_value": 3.2872308034150026e-264,
+  "alpha": 0.01,
+  "alpha_per_test": 0.0009090909090909091,
+  "n_tests": 11,
+  "n_applicable": 11,
+  "n_flagged": 1,
+  "flagged": [
+   "yield_vs_declared"
+  ],
+  "attribution": [
+   {
+    "label": "channel_blocking_or_blinding",
+    "matched_rule": "yield_vs_declared",
+    "rationale": "The detector yield departs from the declared loss budget while every error rate stays within spec. That combination is the signature of an adversary who removes evidence rather than corrupting it -- measure the qubit, then drop the round instead of resending a disturbed copy -- or, if the yield is high rather than low, of injected clicks. It is equally the signature of a fibre splice, a misaligned coupler, or a detector running at the wrong bias.",
+    "priority": 4
+   }
+  ],
+  "tests": [
+   {
+    "name": "pooled_rate_vs_spec",
+    "title": "Pooled error rate vs declared noise floor",
+    "statistic": 0.019867549668874173,
+    "p_value": 0.17509920210086194,
+    "threshold": 0.039622126617503375,
+    "flagged": false,
+    "n": 302,
+    "applicable": true,
+    "detail": {
+     "mismatches": 6,
+     "checks": 302,
+     "spec_rate": 0.012397223954321968,
+     "ci_low": 0.007325097544431088,
+     "ci_high": 0.04273952229188299,
+     "excess": 0.0074703257145522055,
+     "alpha_per_test": 0.0009090909090909091
+    },
+    "interpretation": "The error rate on arrived qubits is higher than the declared hardware floor by more than sampling noise explains. That is what an eavesdropper on the quantum channel looks like, and also what a degraded link looks like; this test distinguishes neither from the other, only both from a healthy link."
+   },
+   {
+    "name": "pooled_rate_vs_transfer",
+    "title": "Pooled error rate vs transfer threshold",
+    "statistic": 0.019867549668874173,
+    "p_value": 1.0,
+    "threshold": 0.16871541421373465,
+    "flagged": false,
+    "n": 302,
+    "applicable": true,
+    "detail": {
+     "mismatches": 6,
+     "checks": 302,
+     "transfer_threshold": 0.16871541421373465,
+     "forger_rate": 0.25
+    },
+    "interpretation": "The error rate has passed the threshold that makes a signature safe to forward. Even if a recipient chooses to accept it, he cannot expect the next party to agree, so the non-repudiation guarantee no longer holds for this key."
+   },
+   {
+    "name": "basis_consistency",
+    "title": "Per-basis error rates vs their declared values",
+    "statistic": 0.010776852425933394,
+    "p_value": 0.16155045142078586,
+    "threshold": 0.00045454545454545455,
+    "flagged": false,
+    "n": 302,
+    "applicable": true,
+    "detail": {
+     "z": {
+      "k": 2,
+      "n": 160,
+      "rate": 0.0125,
+      "spec": 0.009951143125035145,
+      "p_value": 0.47349941538746004
+     },
+     "x": {
+      "k": 4,
+      "n": 142,
+      "rate": 0.028169014084507043,
+      "spec": 0.014843304783608792,
+      "p_value": 0.16155045142078586
+     },
+     "declared_gap": 0.004892161658573648,
+     "observed_gap": 0.015669014084507042,
+     "excess_asymmetry": 0.010776852425933394,
+     "alpha_per_basis": 0.00045454545454545455,
+     "fell_back_to_pooled_spec": false,
+     "note": "per-basis spec rates supplied by the declared noise model"
+    },
+    "interpretation": "At least one measurement basis is noisier than the hardware specification predicts for that basis. A probe that disturbs one basis more than the other produces exactly this pattern and can hide entirely inside a pooled error rate."
+   },
+   {
+    "name": "position_homogeneity",
+    "title": "Error rate homogeneity across message-bit positions",
+    "statistic": 23.139928483678474,
+    "p_value": 0.08121378033006241,
+    "threshold": 0.0009090909090909091,
+    "flagged": false,
+    "n": 302,
+    "applicable": true,
+    "detail": {
+     "dof": 15,
+     "groups": {
+      "0": {
+       "k": 0,
+       "n": 17,
+       "rate": 0.0
+      },
+      "1": {
+       "k": 0,
+       "n": 18,
+       "rate": 0.0
+      },
+      "10": {
+       "k": 0,
+       "n": 15,
+       "rate": 0.0
+      },
+      "11": {
+       "k": 0,
+       "n": 20,
+       "rate": 0.0
+      },
+      "12": {
+       "k": 0,
+       "n": 22,
+       "rate": 0.0
+      },
+      "13": {
+       "k": 0,
+       "n": 19,
+       "rate": 0.0
+      },
+      "14": {
+       "k": 0,
+       "n": 14,
+       "rate": 0.0
+      },
+      "15": {
+       "k": 1,
+       "n": 21,
+       "rate": 0.047619047619047616
+      },
+      "2": {
+       "k": 0,
+       "n": 18,
+       "rate": 0.0
+      },
+      "3": {
+       "k": 3,
+       "n": 22,
+       "rate": 0.13636363636363635
+      },
+      "4": {
+       "k": 1,
+       "n": 24,
+       "rate": 0.041666666666666664
+      },
+      "5": {
+       "k": 0,
+       "n": 15,
+       "rate": 0.0
+      },
+      "6": {
+       "k": 1,
+       "n": 14,
+       "rate": 0.07142857142857142
+      },
+      "7": {
+       "k": 0,
+       "n": 23,
+       "rate": 0.0
+      },
+      "8": {
+       "k": 0,
+       "n": 13,
+       "rate": 0.0
+      },
+      "9": {
+       "k": 0,
+       "n": 27,
+       "rate": 0.0
+      }
+     }
+    },
+    "interpretation": "The error rate is not the same across message-bit positions. Honest noise has no reason to prefer one bit of the message over another, so concentration points at tampering aimed at specific bits rather than at the channel as a whole."
+   },
+   {
+    "name": "level_homogeneity",
+    "title": "Error rate homogeneity across verification levels",
+    "statistic": 2.1701286604064385,
+    "p_value": 0.14071446077426086,
+    "threshold": 0.0009090909090909091,
+    "flagged": false,
+    "n": 302,
+    "applicable": true,
+    "detail": {
+     "dof": 1,
+     "groups": {
+      "accept": {
+       "k": 1,
+       "n": 140,
+       "rate": 0.007142857142857143
+      },
+      "transfer": {
+       "k": 5,
+       "n": 162,
+       "rate": 0.030864197530864196
+      }
+     }
+    },
+    "interpretation": "The error rate differs between verification levels. The same key measured under two policies should give one rate; a split suggests the record one party sees is not the record another sees."
+   },
+   {
+    "name": "yield_vs_declared",
+    "title": "Detector yield vs declared loss budget",
+    "statistic": 0.3900669642857143,
+    "p_value": 1.3551822897738624e-279,
+    "threshold": 0.78200218,
+    "flagged": true,
+    "n": 1792,
+    "applicable": true,
+    "detail": {
+     "clicks": 699,
+     "addressed": 1792,
+     "declared_yield": 0.78200218,
+     "ci_low": 0.36740010867712514,
+     "ci_high": 0.41309442426166776,
+     "direction": "below"
+    },
+    "interpretation": "The fraction of slots that registered a detection does not match the declared loss budget. Fewer detections than expected is consistent with an adversary who measures and then blocks, which leaves every error rate untouched; more detections than expected is consistent with injected or faked clicks."
+   },
+   {
+    "name": "dark_excess",
+    "title": "Dark-count fraction vs declared detector noise",
+    "statistic": 0.0,
+    "p_value": 1.0,
+    "threshold": 2.18e-06,
+    "flagged": false,
+    "n": 1792,
+    "applicable": true,
+    "detail": {
+     "dark": 0,
+     "addressed": 1792,
+     "declared_dark_fraction": 2.18e-06,
+     "ci_low": 0.0,
+     "ci_high": 0.0020564091685497856
+    },
+    "interpretation": "More outcomes are attributable to dark counts than the declared detector noise allows. Since a dark count contributes a uniformly random bit, this also inflates the measured error rate, and the two should be read together."
+   },
+   {
+    "name": "correction_uniformity",
+    "title": "Uniformity of announced Pauli corrections",
+    "statistic": 0.3653846153846154,
+    "p_value": 0.947296626643163,
+    "threshold": 0.0009090909090909091,
+    "flagged": false,
+    "n": 1664,
+    "applicable": true,
+    "detail": {
+     "counts": [
+      410,
+      410,
+      424,
+      420
+     ],
+     "expected": [
+      416.0,
+      416.0,
+      416.0,
+      416.0
+     ],
+     "dof": 3,
+     "labels": [
+      "(0,0)",
+      "(0,1)",
+      "(1,0)",
+      "(1,1)"
+     ]
+    },
+    "interpretation": "The Bell-measurement announcements are not uniform over the four outcomes. Uniformity is what makes the classical transcript information-free, so a bias means the Bell measurement or the announcement channel is being interfered with -- and unlike the error-rate tests, this one fires even when the interference costs no fidelity."
+   },
+   {
+    "name": "decoy_vs_signature",
+    "title": "Decoy slots vs signature slots",
+    "statistic": 0.019867549668874173,
+    "p_value": 0.5989427500172159,
+    "threshold": 0.0009090909090909091,
+    "flagged": false,
+    "n": 353,
+    "applicable": true,
+    "detail": {
+     "signature": {
+      "k": 6,
+      "n": 302,
+      "rate": 0.019867549668874173
+     },
+     "decoy": {
+      "k": 0,
+      "n": 51,
+      "rate": 0.0
+     },
+     "difference": 0.019867549668874173,
+     "z": 1.0152660341705844,
+     "test": "fisher_exact_two_sided"
+    },
+    "interpretation": "Signature slots and decoy slots disagree about how noisy the channel is, even though both crossed it under identical conditions. That pattern is what selective attack on the slots that carry meaning looks like."
+   },
+   {
+    "name": "recipient_agreement",
+    "title": "Agreement between recipients",
+    "statistic": -0.023721340388007054,
+    "p_value": 0.2215865021261171,
+    "threshold": 0.0009090909090909091,
+    "flagged": false,
+    "n": 302,
+    "applicable": true,
+    "detail": {
+     "pairs": [
+      {
+       "left": "bob",
+       "right": "charlie",
+       "left_rate": 0.007142857142857143,
+       "right_rate": 0.030864197530864196,
+       "difference": -0.023721340388007054,
+       "p_value": 0.2215865021261171
+      }
+     ],
+     "alpha_per_pair": 0.0009090909090909091,
+     "n_pairs": 1
+    },
+    "interpretation": "Two recipients of the same signature measured materially different error rates. Because they hold halves of one key and check one declaration, a genuine split means either one link is under attack or the signer distributed unequal keys -- the latter being the setup for repudiation."
+   },
+   {
+    "name": "sequential_onset",
+    "title": "Sequential monitors (SPRT and CUSUM)",
+    "statistic": -7.064643182401812,
+    "p_value": null,
+    "threshold": 6.906754778648554,
+    "flagged": false,
+    "n": 302,
+    "applicable": true,
+    "detail": {
+     "sprt_decision": "accept_h0",
+     "sprt_log_lr": -7.064643182401812,
+     "sprt_upper": 6.906754778648554,
+     "sprt_lower": -6.906754778648554,
+     "sprt_stopped_at": 41,
+     "cusum_alarm_at": null,
+     "cusum_final": 0.0,
+     "cusum_threshold": 12.618182296357007,
+     "stopped_at": null,
+     "p0": 0.012397223954321968,
+     "p1": 0.16871541421373465,
+     "null_rate_clamped": false,
+     "expected_samples_under_attack": 23.23668689326342,
+     "decision_rule": "flagged when the SPRT crosses its upper boundary or the CUSUM alarms; there is no p-value because the stopping rule, not a fixed sample, controls the error rates. both boundaries are derived from a declared alpha of 1e-3 -- Wald's for the SPRT, ln(n/alpha) for the CUSUM -- so the combined false-alarm rate over a run is bounded by 2e-3"
+    },
+    "interpretation": "A sequential monitor would have stopped this run before it finished. The stopping index says how early the evidence became decisive, which is the operationally useful number: every check after it spent an entangled pair on a link already known to be bad."
+   }
+  ],
+  "estimates": {
+   "pooled_rate": {
+    "label": "pooled_rate",
+    "value": 0.019867549668874173,
+    "k": 6,
+    "n": 302,
+    "ci_low": 0.007325097544431088,
+    "ci_high": 0.04273952229188299,
+    "alpha": 0.05,
+    "conditioned_on": "slots that produced a detector outcome (excludes lost rounds)"
+   },
+   "detector_yield": {
+    "label": "detector_yield",
+    "value": 0.3900669642857143,
+    "k": 699,
+    "n": 1792,
+    "ci_low": 0.36740010867712514,
+    "ci_high": 0.41309442426166776,
+    "alpha": 0.05,
+    "conditioned_on": "slots the verifier attempted to measure (includes lost rounds)"
+   },
+   "dark_fraction": {
+    "label": "dark_fraction",
+    "value": 0.0,
+    "k": 0,
+    "n": 1792,
+    "ci_low": 0.0,
+    "ci_high": 0.0020564091685497856,
+    "alpha": 0.05,
+    "conditioned_on": "slots the verifier attempted to measure (includes lost rounds)"
+   },
+   "decoy_rate": {
+    "label": "decoy_rate",
+    "value": 0.0,
+    "k": 0,
+    "n": 51,
+    "ci_low": 0.0,
+    "ci_high": 0.06977703074953759,
+    "alpha": 0.05,
+    "conditioned_on": "slots that produced a detector outcome (excludes lost rounds)"
+   }
+  },
+  "estimates_by_basis": {
+   "Z": {
+    "label": "rate_Z",
+    "value": 0.0125,
+    "k": 2,
+    "n": 160,
+    "ci_low": 0.0015174091031876637,
+    "ci_high": 0.044423034430911265,
+    "alpha": 0.05,
+    "conditioned_on": "slots that produced a detector outcome (excludes lost rounds)"
+   },
+   "X": {
+    "label": "rate_X",
+    "value": 0.028169014084507043,
+    "k": 4,
+    "n": 142,
+    "ci_low": 0.007727337502597124,
+    "ci_high": 0.07055190025304903,
+    "alpha": 0.05,
+    "conditioned_on": "slots that produced a detector outcome (excludes lost rounds)"
+   }
+  },
+  "thresholds": {
+   "spec_rate": 0.012397223954321968,
+   "accept": 0.039622126617503375,
+   "transfer": 0.16871541421373465,
+   "forger_rate": 0.25,
+   "ordered": true,
+   "n_checks": 302,
+   "problems": []
+  },
+  "security_bits": {
+   "false_alarm": 11.059745480969674,
+   "missed_forgery": 77.49891974377532,
+   "missed_blind_forgery": 236.83869001039542
+  },
+  "spec_violations": [],
+  "protocol_rejects": false,
+  "authentication_failed": false,
+  "rejections": [],
+  "declaration_source": "spec_sheet",
+  "declared": {
+   "yield": 0.78200218,
+   "dark_fraction": 2.18e-06,
+   "spec_rate_z": 0.009951143125035145,
+   "spec_rate_x": 0.014843304783608792,
+   "note": "Declared figures came from an independent specification."
+  },
+  "signer": "alice",
+  "key_id": "pk-36ada9da",
+  "elapsed_seconds": 0.0032649389977450483
+ }
+}

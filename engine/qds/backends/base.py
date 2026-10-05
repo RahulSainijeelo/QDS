@@ -82,12 +82,24 @@ class Backend(abc.ABC):
         """Number of qubits in ``state``."""
 
     # -- shared helpers ----------------------------------------------------
-    def fidelity(self, state: Any, target_ket: np.ndarray) -> float:
-        """``<target|rho|target>``."""
+    def fidelity(self, state: Any, target: Any) -> float:
+        """Fidelity of ``state`` with ``target``.
+
+        ``target`` may be a state vector, a plain density matrix, or another
+        backend state; the overlap ``<psi|rho|psi>`` is used whenever one side
+        is pure, which is both exact and the common case here.
+        """
         rho = self.to_numpy(state)
-        psi = np.asarray(target_ket, dtype=complex).reshape(-1)
-        psi = psi / np.linalg.norm(psi)
-        return float(np.real(psi.conj() @ rho @ psi))
+        if isinstance(target, np.ndarray):
+            arr = np.asarray(target, dtype=complex)
+        else:
+            arr = self.to_numpy(target)
+        if arr.ndim == 1 or 1 in arr.shape:
+            psi = arr.reshape(-1)
+            psi = psi / np.linalg.norm(psi)
+            return float(np.real(psi.conj() @ rho @ psi))
+        from .. import linalg as _L
+        return _L.fidelity_states(rho, arr)
 
     def __repr__(self) -> str:  # pragma: no cover - cosmetic
         return f"<{type(self).__name__} name={self.name!r}>"

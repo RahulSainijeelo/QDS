@@ -1,0 +1,510 @@
+{
+ "generated_at": 1791168999.279641,
+ "seed": 0,
+ "families": [
+  {
+   "key": "forgery",
+   "label": "Signature forgery",
+   "module": "qds.attacks.forgery",
+   "blurb": "A party without the private key tries to sign. Caught classically by the one-time MAC, and -- with the MAC stripped away -- bounded physically at a 1/4 per-check error by quantum unforgeability.",
+   "count": 7,
+   "variants": [
+    {
+     "key": "blind",
+     "name": "forgery_blind",
+     "description": "A dishonest recipient ('bob') fabricates Alice's signature using the blind strategy and submits it to 'charlie'. The forger cannot produce the target's one-time MAC tag, so the classical authentication gate refuses it before measurement.",
+     "params": {
+      "strategy": "blind",
+      "known": 0.0,
+      "forger": "bob",
+      "target": "charlie",
+      "seed": 0
+     },
+     "expectation": {
+      "verdict": "compromised",
+      "primary": "authentication_failure",
+      "flags_include": [],
+      "flags_exclude": [],
+      "authentication_failed": true,
+      "note": "MAC gate rejects a declaration the forger could not tag."
+     }
+    },
+    {
+     "key": "single_copy",
+     "name": "forgery_single_copy",
+     "description": "A dishonest recipient ('bob') fabricates Alice's signature using the single_copy strategy and submits it to 'charlie'. The forger cannot produce the target's one-time MAC tag, so the classical authentication gate refuses it before measurement.",
+     "params": {
+      "strategy": "single_copy",
+      "known": 0.0,
+      "forger": "bob",
+      "target": "charlie",
+      "seed": 0
+     },
+     "expectation": {
+      "verdict": "compromised",
+      "primary": "authentication_failure",
+      "flags_include": [],
+      "flags_exclude": [],
+      "authentication_failed": true,
+      "note": "MAC gate rejects a declaration the forger could not tag."
+     }
+    },
+    {
+     "key": "breidbart",
+     "name": "forgery_breidbart",
+     "description": "A dishonest recipient ('bob') fabricates Alice's signature using the breidbart strategy and submits it to 'charlie'. The forger cannot produce the target's one-time MAC tag, so the classical authentication gate refuses it before measurement.",
+     "params": {
+      "strategy": "breidbart",
+      "known": 0.0,
+      "forger": "bob",
+      "target": "charlie",
+      "seed": 0
+     },
+     "expectation": {
+      "verdict": "compromised",
+      "primary": "authentication_failure",
+      "flags_include": [],
+      "flags_exclude": [],
+      "authentication_failed": true,
+      "note": "MAC gate rejects a declaration the forger could not tag."
+     }
+    },
+    {
+     "key": "partial",
+     "name": "forgery_partial",
+     "description": "A dishonest recipient ('bob') fabricates Alice's signature using the partial strategy and submits it to 'charlie'. The forger cannot produce the target's one-time MAC tag, so the classical authentication gate refuses it before measurement.",
+     "params": {
+      "strategy": "partial",
+      "known": 0.5,
+      "forger": "bob",
+      "target": "charlie",
+      "seed": 0
+     },
+     "expectation": {
+      "verdict": "compromised",
+      "primary": "authentication_failure",
+      "flags_include": [],
+      "flags_exclude": [],
+      "authentication_failed": true,
+      "note": "MAC gate rejects a declaration the forger could not tag."
+     }
+    },
+    {
+     "key": "physics_blind",
+     "name": "forgery_physics_blind",
+     "description": "The blind forger's declaration is checked against an independent copy with the classical gates disabled, isolating the quantum unforgeability floor. Measured per-check error rate 0.531; the analytic floor is ~0.500 (1/2 with no key copy, 1/4 for the optimal single-copy measurement -- suboptimal measurements sit above it).",
+     "params": {
+      "strategy": "blind",
+      "known": 0.0,
+      "forger": "bob",
+      "target": "charlie",
+      "seed": 0
+     },
+     "expectation": {
+      "verdict": "n/a",
+      "primary": null,
+      "flags_include": [],
+      "flags_exclude": [],
+      "authentication_failed": null,
+      "note": "physics-only probe; asserted against the analytic floor"
+     }
+    },
+    {
+     "key": "physics_single_copy",
+     "name": "forgery_physics_single_copy",
+     "description": "The single_copy forger's declaration is checked against an independent copy with the classical gates disabled, isolating the quantum unforgeability floor. Measured per-check error rate 0.250; the analytic floor is ~0.250 (1/2 with no key copy, 1/4 for the optimal single-copy measurement -- suboptimal measurements sit above it).",
+     "params": {
+      "strategy": "single_copy",
+      "known": 0.0,
+      "forger": "bob",
+      "target": "charlie",
+      "seed": 0
+     },
+     "expectation": {
+      "verdict": "n/a",
+      "primary": null,
+      "flags_include": [],
+      "flags_exclude": [],
+      "authentication_failed": null,
+      "note": "physics-only probe; asserted against the analytic floor"
+     }
+    },
+    {
+     "key": "physics_breidbart",
+     "name": "forgery_physics_breidbart",
+     "description": "The breidbart forger's declaration is checked against an independent copy with the classical gates disabled, isolating the quantum unforgeability floor. Measured per-check error rate 0.349; the analytic floor is ~0.250 (1/2 with no key copy, 1/4 for the optimal single-copy measurement -- suboptimal measurements sit above it).",
+     "params": {
+      "strategy": "breidbart",
+      "known": 0.0,
+      "forger": "bob",
+      "target": "charlie",
+      "seed": 0
+     },
+     "expectation": {
+      "verdict": "n/a",
+      "primary": null,
+      "flags_include": [],
+      "flags_exclude": [],
+      "authentication_failed": null,
+      "note": "physics-only probe; asserted against the analytic floor"
+     }
+    }
+   ]
+  },
+  {
+   "key": "impersonation",
+   "label": "User impersonation",
+   "module": "qds.attacks.impersonation",
+   "blurb": "A declaration that is not from the signer it names. Rejected deterministically at the identity / MAC gates before measurement.",
+   "count": 4,
+   "variants": [
+    {
+     "key": "unauthenticated",
+     "name": "impersonation_unauthenticated",
+     "description": "An impersonator submits a declaration carrying no MAC tag; the authentication gate rejects a missing tag outright.",
+     "params": {
+      "target": "bob",
+      "seed": 0
+     },
+     "expectation": {
+      "verdict": "compromised",
+      "primary": "authentication_failure",
+      "flags_include": [],
+      "flags_exclude": [],
+      "authentication_failed": true,
+      "note": "a classical binding gate rejects before any measurement"
+     }
+    },
+    {
+     "key": "tampered_payload",
+     "name": "impersonation_tampered_payload",
+     "description": "A dishonest forwarder rewrites a revealed key entry; the one-time tag no longer authenticates the altered payload.",
+     "params": {
+      "target": "bob",
+      "seed": 0
+     },
+     "expectation": {
+      "verdict": "compromised",
+      "primary": "authentication_failure",
+      "flags_include": [],
+      "flags_exclude": [],
+      "authentication_failed": true,
+      "note": "a classical binding gate rejects before any measurement"
+     }
+    },
+    {
+     "key": "unenrolled_signer",
+     "name": "impersonation_unenrolled_signer",
+     "description": "A declaration names an unenrolled signer 'mallory'; the identity gate has no public key on file and rejects.",
+     "params": {
+      "target": "bob",
+      "seed": 0
+     },
+     "expectation": {
+      "verdict": "compromised",
+      "primary": "authentication_failure",
+      "flags_include": [],
+      "flags_exclude": [],
+      "authentication_failed": true,
+      "note": "a classical binding gate rejects before any measurement"
+     }
+    },
+    {
+     "key": "wrong_key_id",
+     "name": "impersonation_wrong_key_id",
+     "description": "A declaration cites Alice's name but an attacker's key_id; the identity gate rejects the key_id mismatch.",
+     "params": {
+      "target": "bob",
+      "seed": 0
+     },
+     "expectation": {
+      "verdict": "compromised",
+      "primary": "authentication_failure",
+      "flags_include": [],
+      "flags_exclude": [],
+      "authentication_failed": true,
+      "note": "a classical binding gate rejects before any measurement"
+     }
+    }
+   ]
+  },
+  {
+   "key": "replay",
+   "label": "Replay",
+   "module": "qds.attacks.replay",
+   "blurb": "A spent signature re-presented, or its freshness fields tampered with. Caught by the anti-replay ledger and the MAC that binds it.",
+   "count": 4,
+   "variants": [
+    {
+     "key": "exact_replay",
+     "name": "replay_exact",
+     "description": "A declaration Bob already accepted is replayed verbatim. The freshness ledger rejects it: the counter no longer increases, the nonce has been seen, and the public-key slots are already spent.",
+     "params": {
+      "target": "bob",
+      "seed": 0
+     },
+     "expectation": {
+      "verdict": "compromised",
+      "primary": "authentication_failure",
+      "flags_include": [],
+      "flags_exclude": [],
+      "authentication_failed": true,
+      "note": "freshness or the MAC that binds it rejects before measurement"
+     }
+    },
+    {
+     "key": "fresh_nonce",
+     "name": "replay_fresh_nonce",
+     "description": "An attacker swaps in a new nonce to beat the seen-before check. The one-time MAC was computed over the original nonce, so the altered declaration fails authentication instead.",
+     "params": {
+      "target": "bob",
+      "seed": 0
+     },
+     "expectation": {
+      "verdict": "compromised",
+      "primary": "authentication_failure",
+      "flags_include": [],
+      "flags_exclude": [],
+      "authentication_failed": true,
+      "note": "freshness or the MAC that binds it rejects before measurement"
+     }
+    },
+    {
+     "key": "stale_timestamp",
+     "name": "replay_stale_timestamp",
+     "description": "A captured declaration is injected long after it was signed. Its MAC is still valid, but the timestamp falls outside the freshness window, so it is rejected as not live.",
+     "params": {
+      "target": "bob",
+      "seed": 0
+     },
+     "expectation": {
+      "verdict": "compromised",
+      "primary": "authentication_failure",
+      "flags_include": [],
+      "flags_exclude": [],
+      "authentication_failed": true,
+      "note": "freshness or the MAC that binds it rejects before measurement"
+     }
+    },
+    {
+     "key": "future_timestamp",
+     "name": "replay_future_timestamp",
+     "description": "A declaration carries a timestamp well in the future, as a pre-dated injection would. It is outside the acceptance window and rejected on freshness.",
+     "params": {
+      "target": "bob",
+      "seed": 0
+     },
+     "expectation": {
+      "verdict": "compromised",
+      "primary": "authentication_failure",
+      "flags_include": [],
+      "flags_exclude": [],
+      "authentication_failed": true,
+      "note": "freshness or the MAC that binds it rejects before measurement"
+     }
+    }
+   ]
+  },
+  {
+   "key": "channel",
+   "label": "Channel manipulation",
+   "module": "qds.attacks.manipulation",
+   "blurb": "Eve acting on the qubits in flight: intercept-resend, entanglement breaking, hidden depolarising, coherent probing, basis-biased probing, loss-blinding, dark-count injection. Caught as excess error, lost yield, or basis asymmetry above the calibrated floor.",
+   "count": 7,
+   "variants": [
+    {
+     "key": "intercept_resend",
+     "name": "channel_intercept_resend",
+     "description": "Eve intercepts, measures in a random basis, and resends every flying qubit. Entanglement is destroyed and the per-check error climbs to about one quarter -- past the acceptance threshold, so the signature is refused.",
+     "params": {
+      "strength": 1.0,
+      "seed": 0
+     },
+     "expectation": {
+      "verdict": "compromised",
+      "primary": "signature_rejected_on_rate",
+      "flags_include": [
+       "pooled_rate_vs_spec"
+      ],
+      "flags_exclude": [],
+      "authentication_failed": null,
+      "note": "full intercept-resend drives QBER to ~1/4"
+     }
+    },
+    {
+     "key": "entanglement_breaking",
+     "name": "channel_entanglement_breaking",
+     "description": "Eve discards the transmitted EPR half and injects an uncorrelated mixed qubit. A qubit still arrives, so a naive protocol proceeds, but the correlation that carries the key is gone and the error rate explodes.",
+     "params": {
+      "strength": 1.0,
+      "seed": 0
+     },
+     "expectation": {
+      "verdict": "compromised",
+      "primary": null,
+      "flags_include": [
+       "pooled_rate_vs_spec"
+      ],
+      "flags_exclude": [],
+      "authentication_failed": null,
+      "note": "substituted qubit is uncorrelated with the key"
+     }
+    },
+    {
+     "key": "collective_depolarizing",
+     "name": "channel_collective_depolarizing",
+     "description": "Eve applies a symmetric depolarising probe (p=0.080) chosen to imitate honest channel noise. Pushed to this strength the excess disturbance clears the calibrated floor and is caught, even though the attack is designed to look like degradation.",
+     "params": {
+      "p": 0.08,
+      "seed": 0
+     },
+     "expectation": {
+      "verdict": "compromised",
+      "primary": null,
+      "flags_include": [
+       "pooled_rate_vs_spec"
+      ],
+      "flags_exclude": [],
+      "authentication_failed": null,
+      "note": "disturbance exceeds the calibrated floor"
+     }
+    },
+    {
+     "key": "coherent_probe",
+     "name": "channel_coherent_probe",
+     "description": "Eve entangles a stored ancilla with each flying qubit (theta=0.500) and measures it only after the private key is revealed. The information she gains is paid for in disturbance on the complementary basis, which the engine sees.",
+     "params": {
+      "theta": 0.5,
+      "seed": 0
+     },
+     "expectation": {
+      "verdict": "compromised",
+      "primary": null,
+      "flags_include": [
+       "pooled_rate_vs_spec"
+      ],
+      "flags_exclude": [],
+      "authentication_failed": null,
+      "note": "information gain is paid for in disturbance"
+     }
+    },
+    {
+     "key": "basis_biased",
+     "name": "channel_basis_biased",
+     "description": "Eve runs a mild asymmetric probe (p_X=0.030, p_Z=0.000) that loads its disturbance onto one basis. The pooled error rate stays under the acceptance threshold, so a single-number check passes the signature -- but the engine's separate per-basis test sees the loaded basis and raises a flag.",
+     "params": {
+      "px": 0.03,
+      "pz": 0.0,
+      "L": 48,
+      "seed": 0
+     },
+     "expectation": {
+      "verdict": "suspicious",
+      "primary": "basis_biased_probe",
+      "flags_include": [
+       "basis_consistency"
+      ],
+      "flags_exclude": [
+       "pooled_rate_vs_spec"
+      ],
+      "authentication_failed": null,
+      "note": "asymmetry hides in the pool, shows per-basis"
+     }
+    },
+    {
+     "key": "loss_blinding",
+     "name": "channel_loss_blinding",
+     "description": "Eve blocks the channel (transmittance 0.50 against a declared 0.92), measuring and dropping rounds rather than resending disturbed ones. The errors that get through stay in spec, but the detector yield collapses below the declared loss budget and the yield detector catches it.",
+     "params": {
+      "transmittance": 0.5,
+      "seed": 0
+     },
+     "expectation": {
+      "verdict": "compromised",
+      "primary": "channel_blocking_or_blinding",
+      "flags_include": [
+       "yield_vs_declared"
+      ],
+      "flags_exclude": [
+       "pooled_rate_vs_spec"
+      ],
+      "authentication_failed": null,
+      "note": "yield departs the loss budget; rate stays in spec"
+     }
+    },
+    {
+     "key": "dark_injection",
+     "name": "channel_dark_injection",
+     "description": "Eve floods the detector with dark counts (rate 0.50 against a declared 1e-5), the mechanism a blinding attack uses to manufacture clicks with no qubit behind them. The registered detections blow past the datasheet's dark budget and the fraction of them that are random coins inflates the error.",
+     "params": {
+      "dark_count": 0.5,
+      "seed": 0
+     },
+     "expectation": {
+      "verdict": "compromised",
+      "primary": null,
+      "flags_include": [
+       "dark_excess"
+      ],
+      "flags_exclude": [],
+      "authentication_failed": null,
+      "note": "dark-count budget exceeded; a premise is broken"
+     }
+    }
+   ]
+  },
+  {
+   "key": "repudiation",
+   "label": "Repudiation and targeted-link attacks",
+   "module": "qds.attacks.repudiation",
+   "blurb": "A dishonest signer (or a targeted link) builds unequal key copies so one recipient accepts what another rejects -- and the private key-symmetrisation step that defuses it.",
+   "count": 2,
+   "variants": [
+    {
+     "key": "targeted_link_attack",
+     "name": "repudiation_targeted_link",
+     "description": "Symmetrisation is disabled and Eve depolarises 'charlie''s signature qubits (p=0.240). That recipient's error rate pulls away from the other's, so the same declaration one accepts the other would reject -- the split a repudiating signer relies on. The agreement detector sees it.",
+     "params": {
+      "victim": "charlie",
+      "p": 0.24,
+      "seed": 0
+     },
+     "expectation": {
+      "verdict": "compromised",
+      "primary": "repudiation_or_targeted_link_attack",
+      "flags_include": [
+       "recipient_agreement"
+      ],
+      "flags_exclude": [],
+      "authentication_failed": null,
+      "note": "asymmetric key copies; premise of the bound is broken"
+     }
+    },
+    {
+     "key": "symmetrisation_defuses",
+     "name": "repudiation_symmetrised",
+     "description": "The same injection into 'charlie''s qubits (p=0.240), but the recipients first permute their signature qubits privately. The dirt is redistributed across both parties: their error rates converge, so the agreement detector no longer sees a split and the repudiation lever is gone. The disturbance itself does not vanish -- both recipients now carry an equal share, so the signature is still caught on its pooled rate. Symmetrisation defeats the repudiation, not the eavesdropper.",
+     "params": {
+      "victim": "charlie",
+      "p": 0.24,
+      "seed": 0
+     },
+     "expectation": {
+      "verdict": "compromised",
+      "primary": null,
+      "flags_include": [],
+      "flags_exclude": [
+       "recipient_agreement"
+      ],
+      "authentication_failed": null,
+      "note": "redistribution equalises the recipients; the split (repudiation lever) is gone though the dirt remains"
+     }
+    }
+   ]
+  }
+ ],
+ "totals": {
+  "families": 5,
+  "variants": 24
+ }
+}

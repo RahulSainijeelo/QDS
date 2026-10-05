@@ -1,0 +1,29 @@
+{
+  "name": "qds-instrument",
+  "version": "1.0.0",
+  "private": true,
+  "description": "The verifier's instrument -- a static-first analytics dashboard over the QDS detection engine's snapshots.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.6"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "test": "node --experimental-strip-types lib/lib.test.ts",
+    "live": "QDS_LIVE=1 next dev",
+    "live:build": "QDS_LIVE=1 next build"
+  },
+  "dependencies": {
+    "next": "^16.3.8",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.3",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "typescript": "^7.0.2"
+  }
+}

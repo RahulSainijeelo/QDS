@@ -1,0 +1,463 @@
+{
+ "config": {
+  "signer": "alice",
+  "verifiers": [
+   "bob",
+   "charlie"
+  ],
+  "message_bits": 16,
+  "L": 24,
+  "signature_slots": 768,
+  "checks_per_signature": 384,
+  "symmetrise": true,
+  "noise_floor_spec": 0.012397223954321968,
+  "calibration_alpha": 0.01,
+  "sampling_epsilon": 1e-06,
+  "threshold_rule": "balanced",
+  "distribution": {
+   "check_pairs": 64,
+   "decoy_slots": 64,
+   "storage_intervals": 1,
+   "exact": false,
+   "intervention": {
+    "name": "none",
+    "description": "Honest channel; only calibrated hardware noise is present."
+   },
+   "predicted_qber": 0.012397223954321968
+  }
+ },
+ "private_key": {
+  "signer": "alice",
+  "key_id": "pk-6cd63e8e",
+  "message_bits": 16,
+  "L": 24,
+  "signature_slots": 768,
+  "private_key_bits": 1536
+ },
+ "distribution": {
+  "bob": {
+   "verifier": "bob",
+   "signer": "alice",
+   "key_id": "pk-6cd63e8e",
+   "slots_held": 896,
+   "available": 354,
+   "check_slots": 64,
+   "decoy_slots": 64,
+   "yield_observed": 0.7622767857142857,
+   "config": {
+    "check_pairs": 64,
+    "decoy_slots": 64,
+    "storage_intervals": 1,
+    "exact": false,
+    "intervention": {
+     "name": "none",
+     "description": "Honest channel; only calibrated hardware noise is present."
+    },
+    "predicted_qber": 0.012397223954321968
+   },
+   "oracle": {
+    "check_pairs": 64,
+    "teleported_slots": 832,
+    "mean_chsh": 2.7986508803005896,
+    "mean_bell_fidelity": 0.9919929976605617,
+    "mean_concurrence": 0.9840354710080165,
+    "exact_qber": 0.011575647983246215,
+    "exact_qber_by_basis": {
+     "Z": 0.009122409838500852,
+     "X": 0.014052324708992333
+    },
+    "exact_qber_decoy": 0.008521823043734042,
+    "announcement_error_rate": 0.004754358161648178,
+    "information_disturbance": {
+     "eve_trace_distance": 0.0,
+     "eve_guess_probability": 0.5,
+     "disturbance_x_basis": 0.014052324708992333,
+     "predicted_trace_distance": 0.23541331210673178
+    }
+   }
+  },
+  "charlie": {
+   "verifier": "charlie",
+   "signer": "alice",
+   "key_id": "pk-6cd63e8e",
+   "slots_held": 896,
+   "available": 329,
+   "check_slots": 64,
+   "decoy_slots": 64,
+   "yield_observed": 0.7600446428571429,
+   "config": {
+    "check_pairs": 64,
+    "decoy_slots": 64,
+    "storage_intervals": 1,
+    "exact": false,
+    "intervention": {
+     "name": "none",
+     "description": "Honest channel; only calibrated hardware noise is present."
+    },
+    "predicted_qber": 0.012397223954321968
+   },
+   "oracle": {
+    "check_pairs": 64,
+    "teleported_slots": 832,
+    "mean_chsh": 2.7986508803005896,
+    "mean_bell_fidelity": 0.9919929976605617,
+    "mean_concurrence": 0.9840354710080166,
+    "exact_qber": 0.010094531892024083,
+    "exact_qber_by_basis": {
+     "Z": 0.009213481747621722,
+     "X": 0.01093727550840895
+    },
+    "exact_qber_decoy": 0.00862246689642883,
+    "announcement_error_rate": 0.0015873015873015873,
+    "information_disturbance": {
+     "eve_trace_distance": 0.0,
+     "eve_guess_probability": 0.5,
+     "disturbance_x_basis": 0.01093727550840895,
+     "predicted_trace_distance": 0.20801587932522947
+    }
+   }
+  }
+ },
+ "symmetrisation": {
+  "performed": true,
+  "recipients": [
+   "bob",
+   "charlie"
+  ],
+  "slots_permuted": 768,
+  "moved": 750,
+  "fraction_moved": 0.48828125
+ },
+ "calibration": {
+  "bob": {
+   "verifier": "bob",
+   "decoys_measured": 49,
+   "decoy_mismatches": 1,
+   "point_estimate": 0.02040816326530612,
+   "lower_confidence": 0.00010229153977270528,
+   "upper_confidence": 0.14206492502832668,
+   "spec_rate": 0.012397223954321968,
+   "p_value_vs_spec": 0.45733376692858674,
+   "spec_violation": false,
+   "sampling_margin": 0.3968542158769511,
+   "certified_rate": 0.5389191409052778,
+   "informative": false,
+   "alpha": 0.01,
+   "sampling_epsilon": 1e-06,
+   "predicted_rate": 0.012397223954321968
+  },
+  "charlie": {
+   "verifier": "charlie",
+   "decoys_measured": 49,
+   "decoy_mismatches": 1,
+   "point_estimate": 0.02040816326530612,
+   "lower_confidence": 0.00010229153977270528,
+   "upper_confidence": 0.14206492502832668,
+   "spec_rate": 0.012397223954321968,
+   "p_value_vs_spec": 0.45733376692858674,
+   "spec_violation": false,
+   "sampling_margin": 0.3968542158769511,
+   "certified_rate": 0.5389191409052778,
+   "informative": false,
+   "alpha": 0.01,
+   "sampling_epsilon": 1e-06,
+   "predicted_rate": 0.012397223954321968
+  }
+ },
+ "policy": {
+  "honest_error_rate": 0.012397223954321968,
+  "s_a": 0.039622126617503375,
+  "s_v": 0.16871541421373465,
+  "forger_error_rate": 0.25,
+  "blind_forger_error_rate": 0.5,
+  "min_checks": 16,
+  "window_seconds": 300.0,
+  "sound": true,
+  "problems": []
+ },
+ "declaration": {
+  "signer": "alice",
+  "key_id": "pk-6cd63e8e",
+  "message_hex": "6869",
+  "message_bits": 16,
+  "L": 24,
+  "checks": 384,
+  "counter": 1,
+  "nonce": "4ab4196b67a2ecc678a91a2ad4bd2591",
+  "timestamp": 1790162783.5876367,
+  "recipients": [
+   "bob",
+   "charlie"
+  ],
+  "mac_tags": {
+   "bob": {
+    "index": 1,
+    "tag": "5743af9bb1c57c0c"
+   },
+   "charlie": {
+    "index": 1,
+    "tag": "9f8a3ca5462aa737"
+   }
+  },
+  "declaration_bytes": 732
+ },
+ "verifications": {
+  "bob": {
+   "verifier": "bob",
+   "signer": "alice",
+   "key_id": "pk-6cd63e8e",
+   "message_hex": "6869",
+   "level": "accept",
+   "threshold": 0.039622126617503375,
+   "accepted": true,
+   "reasons": [],
+   "identity_ok": true,
+   "identity_problems": [],
+   "mac_ok": true,
+   "mac_problems": [],
+   "freshness": {
+    "ok": true,
+    "reasons": []
+   },
+   "measured": true,
+   "slots_addressed": 384,
+   "checks": 287,
+   "mismatches": 5,
+   "missing": 97,
+   "dark": 0,
+   "mismatch_rate": 0.017421602787456445,
+   "detection_yield": 0.7473958333333334,
+   "margin": -0.02220052383004693,
+   "by_basis": {
+    "Z": {
+     "mismatch": 2,
+     "checks": 148
+    },
+    "X": {
+     "mismatch": 3,
+     "checks": 139
+    }
+   },
+   "by_position": {
+    "0": {
+     "mismatch": 3,
+     "checks": 19
+    },
+    "1": {
+     "mismatch": 0,
+     "checks": 15
+    },
+    "2": {
+     "mismatch": 0,
+     "checks": 18
+    },
+    "3": {
+     "mismatch": 0,
+     "checks": 18
+    },
+    "4": {
+     "mismatch": 0,
+     "checks": 22
+    },
+    "5": {
+     "mismatch": 0,
+     "checks": 20
+    },
+    "6": {
+     "mismatch": 1,
+     "checks": 15
+    },
+    "7": {
+     "mismatch": 0,
+     "checks": 20
+    },
+    "8": {
+     "mismatch": 0,
+     "checks": 16
+    },
+    "9": {
+     "mismatch": 0,
+     "checks": 14
+    },
+    "10": {
+     "mismatch": 0,
+     "checks": 15
+    },
+    "11": {
+     "mismatch": 0,
+     "checks": 18
+    },
+    "12": {
+     "mismatch": 0,
+     "checks": 19
+    },
+    "13": {
+     "mismatch": 0,
+     "checks": 20
+    },
+    "14": {
+     "mismatch": 0,
+     "checks": 18
+    },
+    "15": {
+     "mismatch": 1,
+     "checks": 20
+    }
+   },
+   "p_value_vs_honest": 0.2850213026773524,
+   "p_value_vs_forger": 9.448761595200158e-29,
+   "clopper_pearson_95": [
+    0.005680338108427427,
+    0.040185690077682884
+   ],
+   "failure_bounds": {
+    "honest_abort": 0.004054493052276963,
+    "forgery_one_copy": 0.004054460629432306,
+    "forgery_blind": 1.4879369991540352e-30,
+    "repudiation": 0.004054470335948969
+   },
+   "security_bits": {
+    "honest_abort": 7.9462627442484095,
+    "forgery_one_copy": 7.946274281193626,
+    "forgery_blind": 99.08452940413476,
+    "repudiation": 7.946270827336758
+   },
+   "elapsed_seconds": 0.031138559999988047
+  }
+ },
+ "transfers": {
+  "charlie": {
+   "verifier": "charlie",
+   "signer": "alice",
+   "key_id": "pk-6cd63e8e",
+   "message_hex": "6869",
+   "level": "transfer",
+   "threshold": 0.16871541421373465,
+   "accepted": true,
+   "reasons": [
+    "forwarded by 'bob'"
+   ],
+   "identity_ok": true,
+   "identity_problems": [],
+   "mac_ok": true,
+   "mac_problems": [],
+   "freshness": {
+    "ok": true,
+    "reasons": []
+   },
+   "measured": true,
+   "slots_addressed": 384,
+   "checks": 296,
+   "mismatches": 2,
+   "missing": 88,
+   "dark": 0,
+   "mismatch_rate": 0.006756756756756757,
+   "detection_yield": 0.7708333333333334,
+   "margin": -0.1619586574569779,
+   "by_basis": {
+    "Z": {
+     "mismatch": 1,
+     "checks": 159
+    },
+    "X": {
+     "mismatch": 1,
+     "checks": 137
+    }
+   },
+   "by_position": {
+    "0": {
+     "mismatch": 0,
+     "checks": 14
+    },
+    "1": {
+     "mismatch": 0,
+     "checks": 18
+    },
+    "2": {
+     "mismatch": 0,
+     "checks": 18
+    },
+    "3": {
+     "mismatch": 0,
+     "checks": 18
+    },
+    "4": {
+     "mismatch": 0,
+     "checks": 16
+    },
+    "5": {
+     "mismatch": 0,
+     "checks": 20
+    },
+    "6": {
+     "mismatch": 0,
+     "checks": 18
+    },
+    "7": {
+     "mismatch": 0,
+     "checks": 20
+    },
+    "8": {
+     "mismatch": 0,
+     "checks": 19
+    },
+    "9": {
+     "mismatch": 0,
+     "checks": 17
+    },
+    "10": {
+     "mismatch": 0,
+     "checks": 20
+    },
+    "11": {
+     "mismatch": 1,
+     "checks": 21
+    },
+    "12": {
+     "mismatch": 0,
+     "checks": 19
+    },
+    "13": {
+     "mismatch": 1,
+     "checks": 21
+    },
+    "14": {
+     "mismatch": 0,
+     "checks": 20
+    },
+    "15": {
+     "mismatch": 0,
+     "checks": 17
+    }
+   },
+   "p_value_vs_honest": 0.8825366944591517,
+   "p_value_vs_forger": 5.161873970365682e-34,
+   "clopper_pearson_95": [
+    0.0008193245872981519,
+    0.024193265307437185
+   ],
+   "failure_bounds": {
+    "honest_abort": 0.003411333021381656,
+    "forgery_one_copy": 0.003411304886283601,
+    "forgery_blind": 1.7267523329046546e-31,
+    "repudiation": 0.0034113133091649675
+   },
+   "security_bits": {
+    "honest_abort": 8.195448683963516,
+    "forgery_one_copy": 8.195460582694473,
+    "forgery_blind": 102.19170976872435,
+    "repudiation": 8.195457020528504
+   },
+   "elapsed_seconds": 0.03215124199999764
+  }
+ },
+ "timings": {
+  "enrol": 0.3716297479999753,
+  "distribute": 1.795127653999998,
+  "symmetrise": 0.010006736999969235,
+  "calibrate": 0.16688226599995915,
+  "sign": 0.006749642999977823,
+  "verify:bob:accept": 0.031145879000007426,
+  "verify:charlie:transfer": 0.032169409999994514
+ }
+}

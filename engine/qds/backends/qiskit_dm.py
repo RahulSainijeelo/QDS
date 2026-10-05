@@ -10,7 +10,7 @@ projective verification, every attack -- can be re-run on Qiskit and compared
 against the numpy path element by element::
 
     pip install qiskit
-    python -m qds.cli selfcheck --cross-validate
+    python3 -m unittest discover -s tests -p 'test_*.py'
 
 Only ``qiskit.quantum_info`` is used.  There is deliberately no dependency on
 ``qiskit-aer``, on the primitives (``Sampler``/``Estimator``) or on the
@@ -35,9 +35,9 @@ significant.
    Unlike every other module in this package, the code here was not executed
    during development (the build environment had no network access and so no
    Qiskit install).  It is written against the documented, long-stable
-   ``quantum_info`` API and is checked by ``selfcheck --cross-validate``,
-   which asserts agreement with the numpy backend to 1e-12.  Run that command
-   once after installing Qiskit.
+   ``quantum_info`` API and is checked by the Qiskit cross-validation tests in
+   ``tests/test_backends.py``, which assert agreement with the numpy backend to
+   1e-12.  Run the test suite once after installing Qiskit.
 """
 
 from __future__ import annotations

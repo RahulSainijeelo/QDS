@@ -1,0 +1,308 @@
+{
+ "scenario": "intercept-resend-partial",
+ "generated_at": 1791169144.283304,
+ "events": [
+  {
+   "seq": 1,
+   "phase": "enrol",
+   "severity": "info",
+   "code": "phase.enrol",
+   "message": "Enrolment: signer 'alice' and recipient(s) bob, charlie registered with public keys",
+   "data": {
+    "seconds": 0.2414891149965115,
+    "signer": "alice",
+    "verifiers": [
+     "bob",
+     "charlie"
+    ]
+   }
+  },
+  {
+   "seq": 2,
+   "phase": "distribute",
+   "severity": "info",
+   "code": "phase.distribute",
+   "message": "Distribution: entangled halves delivered and measured over 768 signature slots",
+   "data": {
+    "seconds": 1.4345045800000662,
+    "signature_slots": 768,
+    "checks_per_signature": 384
+   }
+  },
+  {
+   "seq": 3,
+   "phase": "symmetrise",
+   "severity": "info",
+   "code": "phase.symmetrise",
+   "message": "Symmetrisation: 736 signature qubits privately permuted among recipients to equalise key copies",
+   "data": {
+    "seconds": 0.00430308400245849,
+    "performed": true,
+    "moved": 736,
+    "slots_permuted": 768
+   }
+  },
+  {
+   "seq": 4,
+   "phase": "calibrate",
+   "severity": "info",
+   "code": "phase.calibrate",
+   "message": "Calibration: acceptance threshold 0.0396, transfer threshold 0.1687 fixed from declared floor 0.0124",
+   "data": {
+    "seconds": 0.1234772090028855,
+    "accept": 0.039622126617503375,
+    "transfer": 0.16871541421373465,
+    "spec_rate": 0.012397223954321968
+   }
+  },
+  {
+   "seq": 5,
+   "phase": "sign",
+   "severity": "info",
+   "code": "phase.sign",
+   "message": "Signing: message 0x6869 signed, 384 one-time checks committed (counter 1)",
+   "data": {
+    "seconds": 0.0065151919989148155,
+    "message_hex": "6869",
+    "checks": 384,
+    "counter": 1
+   }
+  },
+  {
+   "seq": 6,
+   "phase": "verify:bob:accept",
+   "severity": "info",
+   "code": "phase.verify",
+   "message": "Verification (bob, accept): signature refused -- error rate 0.1289 vs threshold 0.0396 (37/287)",
+   "data": {
+    "seconds": 0.02422564599692123,
+    "verifier": "bob",
+    "level": "accept",
+    "accepted": false,
+    "mismatch_rate": 0.1289198606271777,
+    "threshold": 0.039622126617503375,
+    "mismatches": 37,
+    "checks": 287
+   }
+  },
+  {
+   "seq": 7,
+   "phase": "verify:charlie:transfer",
+   "severity": "info",
+   "code": "phase.verify",
+   "message": "Verification (charlie, transfer): signature accepted -- error rate 0.1684 vs threshold 0.1687 (49/291)",
+   "data": {
+    "seconds": 0.0266371399993659,
+    "verifier": "charlie",
+    "level": "transfer",
+    "accepted": true,
+    "mismatch_rate": 0.16838487972508592,
+    "threshold": 0.16871541421373465,
+    "mismatches": 49,
+    "checks": 291
+   }
+  },
+  {
+   "seq": 8,
+   "phase": "detect",
+   "severity": "alert",
+   "code": "test.flag",
+   "message": "pooled_rate_vs_spec flagged (p=4.4e-63): Pooled error rate vs declared noise floor",
+   "data": {
+    "name": "pooled_rate_vs_spec",
+    "p_value": 4.3766701700199865e-63,
+    "statistic": 0.14878892733564014,
+    "threshold": 0.039622126617503375,
+    "applicable": true,
+    "flagged": true
+   }
+  },
+  {
+   "seq": 9,
+   "phase": "detect",
+   "severity": "info",
+   "code": "test.pass",
+   "message": "pooled_rate_vs_transfer passed (p=0.911): Pooled error rate vs transfer threshold",
+   "data": {
+    "name": "pooled_rate_vs_transfer",
+    "p_value": 0.9107235373922741,
+    "statistic": 0.14878892733564014,
+    "threshold": 0.16871541421373465,
+    "applicable": true,
+    "flagged": false
+   }
+  },
+  {
+   "seq": 10,
+   "phase": "detect",
+   "severity": "alert",
+   "code": "test.flag",
+   "message": "basis_consistency flagged (p=6.6e-37): Per-basis error rates vs their declared values",
+   "data": {
+    "name": "basis_consistency",
+    "p_value": 6.581362636967858e-37,
+    "statistic": -0.0025431683699830582,
+    "threshold": 0.00045454545454545455,
+    "applicable": true,
+    "flagged": true
+   }
+  },
+  {
+   "seq": 11,
+   "phase": "detect",
+   "severity": "info",
+   "code": "test.pass",
+   "message": "position_homogeneity passed (p=0.748): Error rate homogeneity across message-bit positions",
+   "data": {
+    "name": "position_homogeneity",
+    "p_value": 0.7479995090435825,
+    "statistic": 11.064630447616484,
+    "threshold": 0.0009090909090909091,
+    "applicable": true,
+    "flagged": false
+   }
+  },
+  {
+   "seq": 12,
+   "phase": "detect",
+   "severity": "info",
+   "code": "test.pass",
+   "message": "level_homogeneity passed (p=0.183): Error rate homogeneity across verification levels",
+   "data": {
+    "name": "level_homogeneity",
+    "p_value": 0.18253003813019553,
+    "statistic": 1.7769033442804816,
+    "threshold": 0.0009090909090909091,
+    "applicable": true,
+    "flagged": false
+   }
+  },
+  {
+   "seq": 13,
+   "phase": "detect",
+   "severity": "info",
+   "code": "test.pass",
+   "message": "yield_vs_declared passed (p=0.407): Detector yield vs declared loss budget",
+   "data": {
+    "name": "yield_vs_declared",
+    "p_value": 0.40687127998938255,
+    "statistic": 0.7739955357142857,
+    "threshold": 0.78200218,
+    "applicable": true,
+    "flagged": false
+   }
+  },
+  {
+   "seq": 14,
+   "phase": "detect",
+   "severity": "info",
+   "code": "test.pass",
+   "message": "dark_excess passed (p=1.000): Dark-count fraction vs declared detector noise",
+   "data": {
+    "name": "dark_excess",
+    "p_value": 1.0,
+    "statistic": 0.0,
+    "threshold": 2.18e-06,
+    "applicable": true,
+    "flagged": false
+   }
+  },
+  {
+   "seq": 15,
+   "phase": "detect",
+   "severity": "info",
+   "code": "test.pass",
+   "message": "correction_uniformity passed (p=0.518): Uniformity of announced Pauli corrections",
+   "data": {
+    "name": "correction_uniformity",
+    "p_value": 0.5184410887147572,
+    "statistic": 2.269230769230769,
+    "threshold": 0.0009090909090909091,
+    "applicable": true,
+    "flagged": false
+   }
+  },
+  {
+   "seq": 16,
+   "phase": "detect",
+   "severity": "info",
+   "code": "test.pass",
+   "message": "decoy_vs_signature passed (p=0.145): Decoy slots vs signature slots",
+   "data": {
+    "name": "decoy_vs_signature",
+    "p_value": 0.1445923736055914,
+    "statistic": 0.06183240559650971,
+    "threshold": 0.0009090909090909091,
+    "applicable": true,
+    "flagged": false
+   }
+  },
+  {
+   "seq": 17,
+   "phase": "detect",
+   "severity": "info",
+   "code": "test.pass",
+   "message": "recipient_agreement passed (p=0.199): Agreement between recipients",
+   "data": {
+    "name": "recipient_agreement",
+    "p_value": 0.19944500053703426,
+    "statistic": -0.03946501909790823,
+    "threshold": 0.0009090909090909091,
+    "applicable": true,
+    "flagged": false
+   }
+  },
+  {
+   "seq": 18,
+   "phase": "detect",
+   "severity": "alert",
+   "code": "test.flag",
+   "message": "sequential_onset flagged (p=n/a): Sequential monitors (SPRT and CUSUM)",
+   "data": {
+    "name": "sequential_onset",
+    "p_value": null,
+    "statistic": 7.686029207334579,
+    "threshold": 6.906754778648554,
+    "applicable": true,
+    "flagged": true
+   }
+  },
+  {
+   "seq": 19,
+   "phase": "verify:bob:accept",
+   "severity": "alert",
+   "code": "protocol.reject",
+   "message": "Signature refused for 'bob' at accept: mismatch rate 0.1289 (37/287) reaches the accept threshold 0.0396",
+   "data": {
+    "verifier": "bob",
+    "level": "accept",
+    "rate": 0.1289198606271777,
+    "threshold": 0.039622126617503375,
+    "rate_exceeded": true,
+    "mac_ok": true,
+    "identity_ok": true,
+    "fresh": true,
+    "reasons": [
+     "mismatch rate 0.1289 (37/287) reaches the accept threshold 0.0396"
+    ]
+   }
+  },
+  {
+   "seq": 20,
+   "phase": "verdict",
+   "severity": "alert",
+   "code": "verdict.compromised",
+   "message": "Verdict: COMPROMISED -- 3/11 detection tests flagged; primary attribution 'signature_rejected_on_rate'",
+   "data": {
+    "verdict": "compromised",
+    "combined_p_value": 1.317514800243516e-86,
+    "n_flagged": 3,
+    "n_applicable": 11,
+    "n_tests": 11,
+    "primary_attribution": "signature_rejected_on_rate",
+    "protocol_rejects": true,
+    "authentication_failed": false
+   }
+  }
+ ]
+}

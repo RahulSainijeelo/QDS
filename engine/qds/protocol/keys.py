@@ -219,12 +219,20 @@ def generate_private_key(signer: str, message_bits: int, L: int,
 class HeldQubit:
     """One qubit of a quantum public key, as actually held by a recipient.
 
-    ``rho`` is the *reduced* single-qubit density matrix.  That is not a
-    simplification: any eavesdropper probe still entangled with this qubit
-    cannot influence the recipient's measurement statistics, so the marginal
-    is a complete description of everything the verifier can observe.  Joint
-    states including Eve's probe are kept by the attack layer where they are
-    needed to quantify her information gain.
+    For signature and decoy slots ``rho`` is the *reduced* single-qubit
+    density matrix.  That is not a simplification: any eavesdropper probe
+    still entangled with this qubit cannot influence the recipient's
+    measurement statistics, so the marginal is a complete description of
+    everything the verifier can observe.  Joint states including Eve's probe
+    are kept by the attack layer where they are needed to quantify her
+    information gain.
+
+    For :attr:`SlotRole.CHECK` slots ``rho`` is instead the *joint* two-qubit
+    state of Alice's half and the recipient's half.  A CHSH value is a
+    correlator between two separately measured halves, so a marginal could not
+    express it; both parties really do hold their own qubit at that point, and
+    the 4x4 matrix is how the simulator represents "an entangled pair is
+    shared".  Use :attr:`n_qubits` to tell the two cases apart.
     """
 
     slot: Slot
@@ -234,6 +242,11 @@ class HeldQubit:
     dark: bool = False                     #: outcome fabricated by a dark count
     consumed: bool = False
     storage_intervals: int = 0
+
+    @property
+    def n_qubits(self) -> int:
+        """1 for a delivered public-key qubit, 2 for a shared check pair."""
+        return int(round(float(np.log2(self.rho.shape[0]))))
 
     def take(self) -> np.ndarray:
         """Consume the qubit (measurement destroys it -- one-time by physics)."""
